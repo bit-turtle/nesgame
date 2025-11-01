@@ -10,9 +10,9 @@
 // CHR ROM
 //#link "chr_rom.s"
 
-// FamiStudio
-#include "famistudio_cc65.h"
-//#link "famistudio_ca65.s"
+// FamiTone2
+//#link "famitone2.s"
+
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
