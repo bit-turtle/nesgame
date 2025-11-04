@@ -125,13 +125,13 @@ void __fastcall__ oam_hide_rest(unsigned char sprid);
 
 
 // initialize the FamiTone system
-void __fastcall__ FamiToneInit(void* music_data);
+void __fastcall__ famitone_init(void* music_data);
 
 // initialize the FamiTone SFX system
 void __fastcall__ sfx_init(void* sounds_data);
 
 // play a music in FamiTone format
-void __fastcall__ FamiToneMusicPlay(unsigned char song);
+void __fastcall__ music_play(unsigned char song);
 
 // stop music
 void __fastcall__ music_stop(void);
@@ -146,7 +146,7 @@ void __fastcall__ sfx_play(unsigned char sound, unsigned char channel);
 void __fastcall__ sample_play(unsigned char sample);
 
 // call from NMI once per frame
-void __fastcall__ FamiToneUpdate(void);
+void __fastcall__ famitone_update(void);
 
 
 // poll controller and return flags like PAD_LEFT etc, input is pad number (0 or 1)
