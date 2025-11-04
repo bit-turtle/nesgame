@@ -16,6 +16,8 @@ typedef struct Collumn {
   byte rows[12];  // List of tiles from tiles list above
 } Collumn;
 
+void render_collumn(byte dir);
+
 const extern Collumn collumns[64];
 
 typedef struct Entity {
@@ -40,5 +42,7 @@ typedef struct Area {
 } Area;
 
 const extern Area areas[32];
+
+extern byte area;
 
 #endif

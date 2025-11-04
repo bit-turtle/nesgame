@@ -30,14 +30,24 @@ extern byte music_data[];
 #include "area.h"
 //#link "area.c"
 
+// Metasprite Macro
+#include "metasprite.h"
+
+// Global Variables
+word t_scroll = 0;
+const byte t_scroll_speed = 2;
+word x_scroll = 0;
+
+byte dir = LEFT;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
-  0x0F,			// screen color
+  0x00,			// screen color
 
-  0x17,0x1A,0x2A,0x00,	// background colors
+  0x1A,0x19,0x29,0x00,	// background colors
   0x00,0x10,0x20,0x00,
   0x06,0x16,0x26,0x00,
+  0x0F,0x27,0x2A,0x00,
 
   0x16,0x35,0x24,0x00,	// sprite colors
   0x00,0x37,0x25,0x00,
@@ -45,31 +55,61 @@ const char PALETTE[32] = {
   0x0F,0x27,0x2A
 };
 
-void render_collumn(Collumn* collumn){
-  register byte y;
-  register Tile* tile;
-  for (y = 0; y < 12; y++) {
-    tile = (Tile*)&tiles[collumn->rows[y]];
-    set_metatile(y, tile->chr);
-    set_attr_entry(x_scroll>>3, y, tile->attr);
-  }
+void display() {
+  vrambuf_end();
+  // ensure VRAM buffer is cleared
+  ppu_wait_nmi();
+  vrambuf_clear();
+  // scroll top bar
+  scroll(t_scroll, 0);
+  // split at sprite zero and set X scroll
+  split(x_scroll, 0);
 }
 
 void dialogue(char* name, char* text) {
+  register byte counter, val;
   vrambuf_put(NTADR_B(2,1), name, strlen(name));
-  vrambuf_put(NTADR_B(2,2), text, strlen(text));
+  vrambuf_put(NTADR_B(2,2), "                            ", 29);
+  while (t_scroll < 256) {
+    t_scroll += t_scroll_speed;
+    display();
+  }
+  val = strlen(text);
+  for (counter = 0; counter < val*2; counter++) {
+    vrambuf_put(NTADR_B(2+(counter>>1),2), text+(counter>>1), 1);
+    display();
+  }
+  counter = 0;
+  do {
+    counter++;
+    if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
+    else vrambuf_put(NTADR_B(29,3), "\x3", 1);
+    val = pad_poll(0);
+    display();
+  } while (!val);
+  vrambuf_put(NTADR_B(29,3), "\x3", 1);
 }
 
-word t_scroll = 0;
-word x_scroll = 0;
-
-byte area = 0;
-byte dir = RIGHT;
+void load_area(word final_scroll) {
+  x_scroll = final_scroll + 32*8;
+  while (x_scroll != final_scroll) {
+    // Render
+    render_collumn(LEFT);
+    // Update
+    update_offscreen(LEFT);
+    x_scroll -= 8;
+    display();
+  }
+}
 
 void main(void) {
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
+  vram_adr(nt2attraddr(NTADR_A(0,1)));
+  vram_fill(ATTRIBUTE(0,0,1,1),16);
+  vram_adr(nt2attraddr(NTADR_B(0,1)));
+  vram_fill(ATTRIBUTE(0,0,1,1),16);
   vram_adr(NTADR_A(0,3));
   vram_fill(0x6, 32);
   vram_adr(NTADR_B(0,3));
@@ -89,25 +129,20 @@ void main(void) {
   //enable rendering
   ppu_on_all();
   // repeat forever
+  load_area(0);
   while(1) {
-    // ensure VRAM buffer is cleared
-    ppu_wait_nmi();
-    vrambuf_clear();
-    // scroll top bar
-    scroll(t_scroll, 0);
-    // split at sprite zero and set X scroll
-    split(x_scroll, 0);
     // Scroll
-    t_scroll++;
-    x_scroll++;
+    if (t_scroll > 256) t_scroll+=t_scroll_speed;
+    else if (t_scroll != 0) t_scroll-=t_scroll_speed;
+    x_scroll;
     // Update Offscreen Tiles
     if (x_scroll&8) {
       // Render
-      render_collumn((Collumn*)&collumns[areas[area].collumns[x_scroll>>4]]);
+      render_collumn(dir);
       // Update
-      update_offscreen(RIGHT);
+      update_offscreen(dir);
     }
-    // End VRAM Update
-    vrambuf_end();
+    // Render
+    display();
   }
 }

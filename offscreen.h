@@ -6,6 +6,8 @@
 
 extern word x_scroll;
 
+#define ATTRIBUTE(topleft, topright, bottomleft, bottomright) ( (bottomright&3) << 6 | (bottomleft&3) << 4 | (topright&3) << 2 | (topleft&3) )
+
 // Get Attribute Table Address from Nametable Address
 word nt2attraddr(word a);
 
