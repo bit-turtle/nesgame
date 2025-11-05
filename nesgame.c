@@ -44,8 +44,8 @@ byte dir = RIGHT;
 
 word playerx = 0;
 byte playery = 0;
-byte playervx = 0;
-byte playervy = 0;
+byte oldplayerx = 0;
+byte oldplayery = 0;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -115,18 +115,16 @@ void load_area(word final_scroll) {
 
 void controls() {
   byte state = pad_poll(0);
+  oldplayerx = playerx;
+  oldplayery = playery;
   if (state&PAD_RIGHT)
-    playervx++;
+    playerx++;
   if (state&PAD_LEFT)
-    playervx--;
+    playerx--;
   if (state&PAD_UP)
-    playervy--;
+    playery--;
   if (state&PAD_DOWN)
-    playervy++;
-  if (state&PAD_B) {
-    playervx*=2;
-    playervy*=2;
-  }
+    playery++;
 }
 
 void main(void) {
@@ -158,10 +156,12 @@ void main(void) {
   // repeat forever
   load_area(0);
   while(1) {
+    // Controls
+    controls();
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
     else if (t_scroll != 0) t_scroll-=t_scroll_speed;
-    x_scroll++;
+    x_scroll=playerx;
     // Update Offscreen Tiles
     if (x_scroll%16 == 0) {
       // Render
