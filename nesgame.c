@@ -6,6 +6,9 @@ Press controller buttons to hear sound effects.
 
 // Neslib
 #include "neslib.h"
+// 0 = horizontal mirroring
+// 1 = vertical mirroring
+#define NES_MIRRORING 1
 
 // link the pattern table into CHR ROM
 //#link "chr_generic.s"
@@ -38,7 +41,7 @@ word t_scroll = 0;
 const byte t_scroll_speed = 2;
 word x_scroll = 0;
 
-byte dir = LEFT;
+byte dir = RIGHT;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -91,13 +94,16 @@ void dialogue(char* name, char* text) {
 }
 
 void load_area(word final_scroll) {
-  x_scroll = final_scroll + 32*8;
-  while (x_scroll != final_scroll) {
+  while(x_scroll != final_scroll+32) {
+    x_scroll+=8;
+    // Update Offscreen Tiles
+    if (x_scroll%16 == 0) {
+      // Render
+      render_collumn(dir);
+      // Update
+      update_offscreen(dir);
+    }
     // Render
-    render_collumn(LEFT);
-    // Update
-    update_offscreen(LEFT);
-    x_scroll -= 8;
     display();
   }
 }
@@ -134,9 +140,9 @@ void main(void) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
     else if (t_scroll != 0) t_scroll-=t_scroll_speed;
-    x_scroll;
+    x_scroll++;
     // Update Offscreen Tiles
-    if (x_scroll&8) {
+    if (x_scroll%16 == 0) {
       // Render
       render_collumn(dir);
       // Update

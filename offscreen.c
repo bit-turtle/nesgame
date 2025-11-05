@@ -55,7 +55,8 @@ void update_offscreen(byte dir) {
   byte x;
   // divide x_scroll by 8
   // to get nametable X position
-  x = (x_scroll/8 + dir) & 63 -1;
+  x = (x_scroll/8 + dir) & 63;
+  x -= 0;
   // get address in either nametable A or B
   if (x < 32)
     addr = NTADR_A(x, 4);
@@ -68,7 +69,7 @@ void update_offscreen(byte dir) {
   // Update Attribute Table
   put_attr_entries(nt2attraddr(addr));
   // Clear Attribute Table Buffer every 4 tiles
-  if ((x & 3) == 2) {
+  if (dir == LEFT ^ (x & 3) == 2) {
     memset(attrbuf, 0, sizeof(attrbuf));
   }
 }
