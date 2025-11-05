@@ -4,18 +4,25 @@
 
 byte area = 0;
 
-void render_collumn_ptr(const Collumn* collumn, word x) {
+void render_collumn_ptr(const Collumn* collumn, const Collumn* collumn2, byte x, byte x2) {
   register byte y;
+  clear_attrbuf();
   for (y = 0; y < 12; y++) {
     set_metatile(y, tiles[collumn->rows[y]].chr);
     set_attr_entry(x, y, tiles[collumn->rows[y]].attr);
+    set_attr_entry(x2, y, tiles[collumn2->rows[y]].attr);
   }
 }
 
 void render_collumn(byte dir){
-  register const Collumn* collumn;
-  collumn = &collumns[areas[area].collumns[(x_scroll>>4)+(dir>>1)]];
-  render_collumn_ptr(collumn, (x_scroll>>4)-dir);
+  const Collumn* collumn;
+  const Collumn* collumn2;
+  byte x = (x_scroll>>4)+(dir>>1);
+  byte x2 = (x&1) ? x-1 : x+1;
+  clear_attrbuf();
+  collumn = &collumns[areas[area].collumns[x]];
+  collumn2 = &collumns[areas[area].collumns[x2]];
+  render_collumn_ptr(collumn, collumn2, x, x2);
 }
 
 const Tile tiles[] = {
@@ -41,7 +48,7 @@ const Entity entities[] = {
 
 const Area areas[] = {
   {
-    12, {1, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 3, 4, 5, 6, 0, 6, 5, 3, 4, 4, 5, 5, 4, 5, 2, 1},
+    23, {1, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 3, 4, 5, 6, 0, 6, 5, 3, 4, 4, 5, 5, 4, 5, 2, 1},
     { {0, 40, 30} }
   }
 };

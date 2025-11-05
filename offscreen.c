@@ -13,6 +13,11 @@ char ntbuf2[PLAYROWS];	// right side
 // a vertical slice of attribute table entries
 char attrbuf[PLAYROWS/4];
 
+// Clear attribute table buffer
+void clear_attrbuf() {
+  memset(attrbuf, 0, sizeof(attrbuf));
+}
+
 // convert from nametable address to attribute table address
 word nt2attraddr(word a) {
   return (a & 0x2c00) | 0x3c0 |
@@ -55,8 +60,7 @@ void update_offscreen(byte dir) {
   byte x;
   // divide x_scroll by 8
   // to get nametable X position
-  x = (x_scroll/8 - dir) & 63;
-  x -= 0;
+  x = ( (x_scroll>>3) - dir) & 63;
   // get address in either nametable A or B
   if (x < 32)
     addr = NTADR_A(x, 4);
@@ -68,8 +72,4 @@ void update_offscreen(byte dir) {
   vrambuf_put((addr+1) | VRAMBUF_VERT, ntbuf2, PLAYROWS);
   // Update Attribute Table
   put_attr_entries(nt2attraddr(addr));
-  // Clear Attribute Table Buffer every 4 tiles
-  if (dir == LEFT ^ (x & 3) == 2) {
-    memset(attrbuf, 0, sizeof(attrbuf));
-  }
 }

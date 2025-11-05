@@ -162,10 +162,11 @@ void main(void) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
     else if (t_scroll != 0) t_scroll-=t_scroll_speed;
-    if (playerx < x_scroll && dir == RIGHT)
+    if (playerx < x_scroll)
       dir = LEFT;
     else
       dir = RIGHT;
+    // Limits
     if (playerx <= areas[area].width*16)
     	x_scroll=playerx;
     // Update Offscreen Tiles
