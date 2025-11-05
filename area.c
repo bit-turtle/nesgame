@@ -14,7 +14,7 @@ void render_collumn_ptr(const Collumn* collumn, word x) {
 
 void render_collumn(byte dir){
   register const Collumn* collumn;
-  collumn = &collumns[areas[area].collumns[(x_scroll>>4)+dir]];
+  collumn = &collumns[areas[area].collumns[(x_scroll>>4)+(dir>>1)]];
   render_collumn_ptr(collumn, (x_scroll>>4)-dir);
 }
 
@@ -26,9 +26,13 @@ const Tile tiles[] = {
 };
 
 const Collumn collumns[] = {
+  {{0,0,0,0,0,0,0,0,0,0,0,0}},
+  {{0,0,0,0,0,1,2,0,0,0,0,0}},
   {{0,0,0,0,1,3,3,2,0,0,0,0}},
+  {{0,0,0,1,3,3,3,3,2,0,0,0}},
   {{0,0,1,3,3,3,3,3,3,2,0,0}},
-  {{0,1,3,3,3,3,3,3,3,3,2,0}}
+  {{0,1,3,3,3,3,3,3,3,3,2,0}},
+  {{3,3,3,3,3,3,3,3,3,3,3,3}}
 };
 
 const Entity entities[] = {
@@ -37,7 +41,7 @@ const Entity entities[] = {
 
 const Area areas[] = {
   {
-    4, {0, 1, 2, 0, 1, 2, 0, 1, 2, },
+    12, {1, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 3, 4, 5, 6, 0, 6, 5, 3, 4, 4, 5, 5, 4, 5, 2, 1},
     { {0, 40, 30} }
   }
 };
