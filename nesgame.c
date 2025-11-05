@@ -111,6 +111,7 @@ void load_area(word final_scroll) {
     // Render
     display();
   }
+  x_scroll = final_scroll;
 }
 
 void controls() {
@@ -161,7 +162,12 @@ void main(void) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
     else if (t_scroll != 0) t_scroll-=t_scroll_speed;
-    x_scroll=playerx;
+    if (playerx < x_scroll && dir == RIGHT)
+      dir = LEFT;
+    else
+      dir = RIGHT;
+    if (playerx <= areas[area].width*16)
+    	x_scroll=playerx;
     // Update Offscreen Tiles
     if (x_scroll%16 == 0) {
       // Render
