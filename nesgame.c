@@ -40,8 +40,12 @@ extern byte music_data[];
 word t_scroll = 0;
 const byte t_scroll_speed = 2;
 word x_scroll = 0;
-
 byte dir = RIGHT;
+
+word playerx = 0;
+byte playery = 0;
+byte playervx = 0;
+byte playervy = 0;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -94,17 +98,34 @@ void dialogue(char* name, char* text) {
 }
 
 void load_area(word final_scroll) {
-  while(x_scroll != final_scroll+32) {
-    x_scroll+=8;
-    // Update Offscreen Tiles
-    if (x_scroll%16 == 0) {
-      // Render
-      render_collumn(dir);
-      // Update
-      update_offscreen(dir);
-    }
+  x_scroll = final_scroll+32*8;
+  while(x_scroll != final_scroll-16) {
+    // Scroll
+    if (t_scroll > 256) t_scroll+=t_scroll_speed;
+    else if (t_scroll != 0) t_scroll-=t_scroll_speed;
+    x_scroll-=16;
+    // Render
+    render_collumn(LEFT);
+    // Update
+    update_offscreen(LEFT);
     // Render
     display();
+  }
+}
+
+void controls() {
+  byte state = pad_poll(0);
+  if (state&PAD_RIGHT)
+    playervx++;
+  if (state&PAD_LEFT)
+    playervx--;
+  if (state&PAD_UP)
+    playervy--;
+  if (state&PAD_DOWN)
+    playervy++;
+  if (state&PAD_B) {
+    playervx*=2;
+    playervy*=2;
   }
 }
 
