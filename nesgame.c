@@ -33,12 +33,13 @@ extern byte music_data[];
 #include "area.h"
 //#link "area.c"
 
-// Metasprite Macro
-#include "metasprite.h"
+// Metasprite Display
+#include "sprite.h"
+//#link "sprite.c"
 
 // Global Variables
 word t_scroll = 0;
-const byte t_scroll_speed = 2;
+const byte t_scroll_speed = 16;
 word x_scroll = 0;
 byte dir = RIGHT;
 
@@ -63,6 +64,8 @@ const char PALETTE[32] = {
 };
 
 void display() {
+  // reset oam_id
+  oam_id = 1;
   vrambuf_end();
   // ensure VRAM buffer is cleared
   ppu_wait_nmi();
@@ -95,11 +98,15 @@ void dialogue(char* name, char* text) {
     display();
   } while (!val);
   vrambuf_put(NTADR_B(29,3), "\x3", 1);
+  while (t_scroll > 0) {
+    t_scroll -= t_scroll_speed;
+    display();
+  }
 }
 
 void load_area(word final_scroll) {
   x_scroll = final_scroll+32*8;
-  while(x_scroll != final_scroll-16) {
+  while(x_scroll != final_scroll) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
     else if (t_scroll != 0) t_scroll-=t_scroll_speed;
@@ -111,7 +118,6 @@ void load_area(word final_scroll) {
     // Render
     display();
   }
-  x_scroll = final_scroll;
 }
 
 void controls() {
@@ -129,6 +135,7 @@ void controls() {
 }
 
 void main(void) {
+  word newx_scroll;
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
@@ -156,19 +163,11 @@ void main(void) {
   ppu_on_all();
   // repeat forever
   load_area(0);
+  dialogue("Bobbert", "It works now!");
   while(1) {
-    // Controls
-    controls();
-    // Scroll
-    if (t_scroll > 256) t_scroll+=t_scroll_speed;
-    else if (t_scroll != 0) t_scroll-=t_scroll_speed;
-    if (playerx < x_scroll)
-      dir = LEFT;
-    else
-      dir = RIGHT;
     // Limits
-    if (playerx <= areas[area].width*16)
-    	x_scroll=playerx;
+    if (newx_scroll <= areas[area].width*16)
+    	x_scroll=newx_scroll;
     // Update Offscreen Tiles
     if (x_scroll%16 == 0) {
       // Render
@@ -178,5 +177,15 @@ void main(void) {
     }
     // Render
     display();
+    
+    // Update Game
+    // Controls
+    controls();
+    newx_scroll = playerx*4;
+    // Scroll
+    if (newx_scroll < x_scroll)
+      dir = LEFT;
+    else
+      dir = RIGHT;
   }
 }

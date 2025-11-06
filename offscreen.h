@@ -1,5 +1,7 @@
 
 // Offscreen Tiles
+#ifndef _OFFSCREEN_H
+#define _OFFSCREEN_H
 
 #define RIGHT 32
 #define LEFT 0
@@ -22,3 +24,5 @@ void set_attr_entry(byte x, byte y, byte pal);
 
 // Update the VRAM buffer with offscreen changes
 void update_offscreen(byte dir);
+
+#endif
