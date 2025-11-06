@@ -42,30 +42,37 @@ word t_scroll = 0;
 const byte t_scroll_speed = 16;
 word x_scroll = 0;
 byte dir = RIGHT;
-
-word playerx = 0;
+word playerx = 50;
 byte playery = 0;
+bool moving = false;
 byte oldplayerx = 0;
 byte oldplayery = 0;
 
+#define CENTER 119
+
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
-  0x00,			// screen color
+  0x0F,			// screen color
 
   0x1A,0x19,0x29,0x00,	// background colors
   0x00,0x10,0x20,0x00,
   0x1A,0x17,0x2D,0x00,
   0x0F,0x27,0x2A,0x00,
 
-  0x16,0x35,0x24,0x00,	// sprite colors
+  0x06,0x37,0x24,0x00,	// sprite colors
   0x00,0x37,0x25,0x00,
   0x0F,0x2D,0x1A,0x00,
   0x0F,0x27,0x2A
 };
 
+bool compareword(word a, word b) {
+  return a == b && a>>8 == b>>8;
+}
+
 void display() {
   // reset oam_id
-  oam_id = 1;
+  oam_hide_rest(oam_id);
+  oam_id = 4;
   vrambuf_end();
   // ensure VRAM buffer is cleared
   ppu_wait_nmi();
@@ -124,18 +131,38 @@ void controls() {
   byte state = pad_poll(0);
   oldplayerx = playerx;
   oldplayery = playery;
-  if (state&PAD_RIGHT)
+  moving = false;
+  if (state&PAD_RIGHT) {
     playerx++;
-  if (state&PAD_LEFT)
+    dir = RIGHT;
+    if (playerx>>4>=areas[area].width-1)
+      playerx = areas[area].width-1<<4;
+    moving = true;
+  }
+  if (state&PAD_LEFT) {
     playerx--;
-  if (state&PAD_UP)
+    dir = LEFT;
+    if (playerx > 256<<4)
+      playerx = 0;
+    moving = true;
+  }
+  if (state&PAD_UP) {
     playery--;
-  if (state&PAD_DOWN)
+    if (playery > oldplayery)
+      playery = 0;
+    moving = true;
+  }
+  if (state&PAD_DOWN) {
     playery++;
+    if (playery > 22*8)
+      playery = 22*8;
+    moving = true;
+  }
 }
 
 void main(void) {
   word newx_scroll;
+  byte playerframe = 0;
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
@@ -155,7 +182,7 @@ void main(void) {
   music_play(0);
   // top bar split sprite
   oam_clear();
-  oam_spr(0, 30, 0xa0, 0, 0);
+  oam_spr(0, 30, 0x80, 2, 0);
   // vrambuf initialization
   vrambuf_clear();
   set_vram_update(updbuf);
@@ -164,10 +191,17 @@ void main(void) {
   // repeat forever
   load_area(0);
   dialogue("Bobbert", "It works now!");
+  // Reset newx_scroll
+  newx_scroll = x_scroll;
   while(1) {
+    // Scroll
     // Limits
-    if (newx_scroll <= areas[area].width*16)
-    	x_scroll=newx_scroll;
+    if (newx_scroll > 0xfff)
+      x_scroll = 0;
+    else if (newx_scroll > 16*areas[area].width-0xff)
+      x_scroll = 16*areas[area].width-0xff;
+    else
+      x_scroll = newx_scroll;
     // Update Offscreen Tiles
     if (x_scroll%16 == 0) {
       // Render
@@ -181,11 +215,11 @@ void main(void) {
     // Update Game
     // Controls
     controls();
-    newx_scroll = playerx*4;
-    // Scroll
-    if (newx_scroll < x_scroll)
-      dir = LEFT;
-    else
-      dir = RIGHT;
+    newx_scroll = playerx-CENTER;
+    playerframe = !(playerx==oldplayerx) ? playerx : (!(playery == oldplayery) ? playery : 0);
+    playerframe = (((playerframe&32) ? ((playerframe&16) ? 0xd8 : 0xdc) : ((playerframe&16) ? 0xd8 : 0xe0)));
+    if (!moving)
+      playerframe = 0xd8;
+    metasprite(playerx==oldplayerx ? 0xd8 : playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
   }
 }
