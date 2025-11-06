@@ -151,7 +151,7 @@ void load_area(word x, byte y) {
 }
 
 bool player_collision(word x, byte y) {
-  return (playerx < x+16 && playerx >= x && playery < y+16 && playery >= y);
+  return (playerx+8 < x+16 && playerx+8 >= x && playery+8 < y+16 && playery+8 >= y);
 }
 
 void controls() {
@@ -240,12 +240,12 @@ void main(void) {
     // Controls
     controls();
     player_scroll();
-    playerframe = !(playerx==oldplayerx) ? playerx : (!(playery == oldplayery) ? playery : 0);
+    playerframe = (playerx != oldplayerx) ? playerx : ((playery != oldplayery) ? playery : 0);
     playerframe*=2;
     playerframe = (((playerframe&32) ? ((playerframe&16) ? 0xd8 : 0xdc) : ((playerframe&16) ? 0xd8 : 0xe0)));
     if (!moving)
       playerframe = 0xd8;
-    metasprite(playerx==oldplayerx ? 0xd8 : playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+    metasprite(playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     
     // Render entities
     for (i = 0; i < MAX_ENTITIES; i++) {
