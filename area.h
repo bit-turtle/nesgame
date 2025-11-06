@@ -22,20 +22,20 @@ void render_collumn(byte dir);
 
 const extern Collumn collumns[64];
 
-typedef struct Entity {
-  byte chr;
-  byte attr;
-  void (*move)();
-  void (*interact)();
-} Entity;
-
-const extern Entity entities[64];
-
 typedef struct EntityState {
   byte entity;
   word x;
   byte y;
 } EntityState;
+
+typedef struct Entity {
+  byte chr;
+  byte attr;
+  void (*collide)(EntityState*);
+  void (*tick)(EntityState*);
+} Entity;
+
+const extern Entity entities[64];
 
 #define MAX_ENTITIES 6
 

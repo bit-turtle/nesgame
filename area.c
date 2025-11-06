@@ -42,14 +42,6 @@ const Collumn collumns[] = {
   {{3,3,3,3,3,3,3,3,3,3,3,3}}
 };
 
-const Entity entities[] = {
-  // Null entity, nothing is rendered
-  {0,0,NULL,NULL},
-  // Entities
-  {0xfc, 0, NULL,NULL},
-  {0xf4, 0, NULL,NULL}
-};
-
 const Area areas[] = {
   {
     31, {1, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 3, 4, 5, 6, 0, 6, 5, 3, 4, 4, 5, 5, 4, 5, 2, 1},
@@ -57,7 +49,7 @@ const Area areas[] = {
       {1, 4*TILE_SIZE, 2*TILE_SIZE},
       {1, 8*TILE_SIZE, 2*TILE_SIZE},
       {1, 4*TILE_SIZE, 9*TILE_SIZE},
-      {1, 8*TILE_SIZE, 9*TILE_SIZE},
+      {1, 20*TILE_SIZE, 9*TILE_SIZE},
       {2, 6*TILE_SIZE, 6*TILE_SIZE},
       {2, 6*TILE_SIZE, 5*TILE_SIZE}
     }

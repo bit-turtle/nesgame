@@ -47,8 +47,21 @@ byte playerspeed = 2;
 word playerx = 50;
 byte playery = 0;
 bool moving = false;
-byte oldplayerx = 0;
+word oldplayerx = 0;
 byte oldplayery = 0;
+
+void pushable(EntityState* entity) {
+  entity->x += playerx-oldplayerx;
+  entity->y += playery-oldplayery;
+}
+
+const Entity entities[] = {
+  // Null entity, nothing is rendered
+  {0,0,NULL,NULL},
+  // Entities
+  {0xfc, 0, NULL,NULL},
+  {0xf4, 0, pushable,NULL}
+};
 
 #define CENTER 119
 
@@ -88,6 +101,7 @@ void display() {
 
 void dialogue(char* name, char* text) {
   register byte counter, val;
+  vrambuf_put(NTADR_B(2,1), "                            ", 29);
   vrambuf_put(NTADR_B(2,1), name, strlen(name));
   vrambuf_put(NTADR_B(2,2), "                            ", 29);
   while (t_scroll < 256) {
@@ -265,8 +279,12 @@ void main(void) {
       if (current_entities[i].entity == 0)
         continue;
       // Process
-      if (player_collision(current_entities[i].x, current_entities[i].y))
-        dialogue("Entity     ", "Collision Test");
+      if (entities[current_entities[i].entity].collide != NULL && player_collision(current_entities[i].x, current_entities[i].y)) {
+        entities[current_entities[i].entity].collide(&current_entities[i]);
+      }
+      if (entities[current_entities[i].entity].tick != NULL) {
+        entities[current_entities[i].entity].tick(&current_entities[i]);
+      }
     }
   }
 }
