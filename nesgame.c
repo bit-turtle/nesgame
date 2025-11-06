@@ -41,7 +41,9 @@ extern byte music_data[];
 word t_scroll = 0;
 const byte t_scroll_speed = 16;
 word x_scroll = 0;
+word newx_scroll;
 byte dir = RIGHT;
+byte playerspeed = 2;
 word playerx = 50;
 byte playery = 0;
 bool moving = false;
@@ -49,6 +51,8 @@ byte oldplayerx = 0;
 byte oldplayery = 0;
 
 #define CENTER 119
+
+EntityState current_entities[MAX_ENTITIES];
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -71,7 +75,6 @@ bool compareword(word a, word b) {
 
 void display() {
   // reset oam_id
-  oam_hide_rest(oam_id);
   oam_id = 4;
   vrambuf_end();
   // ensure VRAM buffer is cleared
@@ -111,8 +114,25 @@ void dialogue(char* name, char* text) {
   }
 }
 
-void load_area(word final_scroll) {
-  x_scroll = final_scroll+32*8;
+void player_scroll() {
+    newx_scroll = playerx-CENTER;
+    // Limits
+    if (newx_scroll > 0xfff)
+      x_scroll = 0;
+    else if (newx_scroll > 16*areas[area].width-0xff)
+      x_scroll = 16*areas[area].width-0xff;
+    else
+      x_scroll = newx_scroll;
+}
+
+void load_area(word x, byte y) {
+  byte i;
+  word final_scroll;
+  playerx = x;
+  playery = y;
+  player_scroll();
+  final_scroll = x_scroll;
+  x_scroll += 32*8;
   while(x_scroll != final_scroll) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
@@ -125,6 +145,13 @@ void load_area(word final_scroll) {
     // Render
     display();
   }
+  for (i = 0; i < MAX_ENTITIES; i++) {
+    current_entities[i] = areas[area].entities[i];
+  }
+}
+
+bool player_collision(word x, byte y) {
+  return (playerx < x+16 && playerx >= x && playery < y+16 && playery >= y);
 }
 
 void controls() {
@@ -133,27 +160,27 @@ void controls() {
   oldplayery = playery;
   moving = false;
   if (state&PAD_RIGHT) {
-    playerx++;
+    playerx+=playerspeed;
     dir = RIGHT;
     if (playerx>>4>=areas[area].width-1)
       playerx = areas[area].width-1<<4;
     moving = true;
   }
   if (state&PAD_LEFT) {
-    playerx--;
+    playerx-=playerspeed;
     dir = LEFT;
     if (playerx > 256<<4)
       playerx = 0;
     moving = true;
   }
   if (state&PAD_UP) {
-    playery--;
+    playery-=playerspeed;
     if (playery > oldplayery)
       playery = 0;
     moving = true;
   }
   if (state&PAD_DOWN) {
-    playery++;
+    playery+=playerspeed;
     if (playery > 22*8)
       playery = 22*8;
     moving = true;
@@ -161,8 +188,9 @@ void controls() {
 }
 
 void main(void) {
-  word newx_scroll;
+  word renderx_scroll;
   byte playerframe = 0;
+  byte i = 0;
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
@@ -189,25 +217,21 @@ void main(void) {
   //enable rendering
   ppu_on_all();
   // repeat forever
-  load_area(0);
+  load_area(50,60);
   dialogue("Bobbert", "It works now!");
   // Reset newx_scroll
   newx_scroll = x_scroll;
+  renderx_scroll = x_scroll;
   while(1) {
     // Scroll
-    // Limits
-    if (newx_scroll > 0xfff)
-      x_scroll = 0;
-    else if (newx_scroll > 16*areas[area].width-0xff)
-      x_scroll = 16*areas[area].width-0xff;
-    else
-      x_scroll = newx_scroll;
     // Update Offscreen Tiles
-    if (x_scroll%16 == 0) {
+    if (x_scroll >= renderx_scroll+16 || x_scroll <= renderx_scroll-16) {
       // Render
       render_collumn(dir);
       // Update
       update_offscreen(dir);
+      // Renderx
+      renderx_scroll = x_scroll;
     }
     // Render
     display();
@@ -215,11 +239,34 @@ void main(void) {
     // Update Game
     // Controls
     controls();
-    newx_scroll = playerx-CENTER;
+    player_scroll();
     playerframe = !(playerx==oldplayerx) ? playerx : (!(playery == oldplayery) ? playery : 0);
+    playerframe*=2;
     playerframe = (((playerframe&32) ? ((playerframe&16) ? 0xd8 : 0xdc) : ((playerframe&16) ? 0xd8 : 0xe0)));
     if (!moving)
       playerframe = 0xd8;
     metasprite(playerx==oldplayerx ? 0xd8 : playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+    
+    // Render entities
+    for (i = 0; i < MAX_ENTITIES; i++) {
+      if (current_entities[i].entity == 0)
+        continue;
+      // Render
+      metasprite(entities[current_entities[i].entity].chr, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
+    }
+    
+    // Hide unused sprites
+    oam_hide_rest(oam_id);
+    // Display again because my code is slow for some reason and can't render in time
+    display();
+    
+    // Process entities
+    for (i = 0; i < MAX_ENTITIES; i++) {
+      if (current_entities[i].entity == 0)
+        continue;
+      // Process
+      if (player_collision(current_entities[i].x, current_entities[i].y))
+        dialogue("Entity     ", "Collision Test");
+    }
   }
 }

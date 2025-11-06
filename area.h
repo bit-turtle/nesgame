@@ -10,6 +10,8 @@ typedef struct Tile {
   byte behavior;
 } Tile;
 
+#define TILE_SIZE 16
+
 const extern Tile tiles[256];
 
 typedef struct Collumn {
@@ -35,10 +37,12 @@ typedef struct EntityState {
   byte y;
 } EntityState;
 
+#define MAX_ENTITIES 6
+
 typedef struct Area {
   byte width;
   byte collumns[64];	// list of collumns from list above
-  EntityState entities[16];
+  EntityState entities[MAX_ENTITIES];
 } Area;
 
 const extern Area areas[32];
