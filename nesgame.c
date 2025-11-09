@@ -43,12 +43,13 @@ const byte t_scroll_speed = 16;
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
-byte playerspeed = 2;
+byte playerspeed = 1;
 word playerx = 50;
 byte playery = 0;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
+byte playerhealth = 12;
 
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
@@ -72,7 +73,7 @@ const char PALETTE[32] = {
   0x0F,			// screen color
 
   0x1A,0x19,0x29,0x00,	// background colors
-  0x00,0x10,0x20,0x00,
+  0x00,0x16,0x20,0x00,
   0x1A,0x17,0x2D,0x00,
   0x0F,0x27,0x2A,0x00,
 
@@ -86,13 +87,15 @@ bool compareword(word a, word b) {
   return a == b && a>>8 == b>>8;
 }
 
-void display() {
+void wait_frame() {
   // reset oam_id
   oam_id = 4;
   vrambuf_end();
   // ensure VRAM buffer is cleared
   ppu_wait_nmi();
   vrambuf_clear();
+}
+void start_frame() {
   // scroll top bar
   scroll(t_scroll, 0);
   // split at sprite zero and set X scroll
@@ -106,12 +109,12 @@ void dialogue(char* name, char* text) {
   vrambuf_put(NTADR_B(2,2), "                            ", 29);
   while (t_scroll < 256) {
     t_scroll += t_scroll_speed;
-    display();
+    wait_frame();
   }
   val = strlen(text);
   for (counter = 0; counter < val*2; counter++) {
     vrambuf_put(NTADR_B(2+(counter>>1),2), text+(counter>>1), 1);
-    display();
+    wait_frame();
   }
   counter = 0;
   do {
@@ -119,12 +122,12 @@ void dialogue(char* name, char* text) {
     if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
     else vrambuf_put(NTADR_B(29,3), "\x3", 1);
     val = pad_poll(0);
-    display();
+    wait_frame();
   } while (!val);
   vrambuf_put(NTADR_B(29,3), "\x3", 1);
   while (t_scroll > 0) {
     t_scroll -= t_scroll_speed;
-    display();
+    wait_frame();
   }
 }
 
@@ -157,7 +160,7 @@ void load_area(word x, byte y) {
     // Update
     update_offscreen(LEFT);
     // Render
-    display();
+    wait_frame();
   }
   for (i = 0; i < MAX_ENTITIES; i++) {
     current_entities[i] = areas[area].entities[i];
@@ -204,7 +207,7 @@ void controls() {
 void main(void) {
   word renderx_scroll;
   byte playerframe = 0;
-  byte i = 0;
+  byte i,j;
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
@@ -213,26 +216,21 @@ void main(void) {
   vram_adr(nt2attraddr(NTADR_B(0,1)));
   vram_fill(ATTRIBUTE(0,0,1,1),16);
   vram_adr(NTADR_A(0,3));
-  vram_fill(0x6, 32);
+  vram_fill(0x5, 32);
   vram_adr(NTADR_B(0,3));
   vram_fill(0x3, 32);
-  // initialize music system
-  famitone_init(music_data);
-  // set music callback function for NMI
-  nmi_set_callback(famitone_update);
-  // play music
-  music_play(0);
   // top bar split sprite
   oam_clear();
   oam_spr(0, 30, 0x80, 2, 0);
   // vrambuf initialization
   vrambuf_clear();
   set_vram_update(updbuf);
+  // display
+  nmi_set_callback(start_frame);
   //enable rendering
   ppu_on_all();
   // repeat forever
-  load_area(50,60);
-  dialogue("Bobbert", "It works now!");
+  load_area(5*TILE_SIZE,6*TILE_SIZE-8);
   // Reset newx_scroll
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
@@ -247,8 +245,13 @@ void main(void) {
       // Renderx
       renderx_scroll = x_scroll;
     }
+    // Player health
+    for (i = 0; i < playerhealth; i+=4) {
+      j = 0x14+(playerhealth-i)%4;
+      vrambuf_put(NTADR_A(2+(i>>2),2), &j, 1);
+    }
     // Render
-    display();
+    wait_frame();
     
     // Update Game
     // Controls
@@ -256,7 +259,7 @@ void main(void) {
     player_scroll();
     playerframe = (playerx != oldplayerx) ? playerx : ((playery != oldplayery) ? playery : 0);
     playerframe*=2;
-    playerframe = (((playerframe&32) ? ((playerframe&16) ? 0xd8 : 0xdc) : ((playerframe&16) ? 0xd8 : 0xe0)));
+    playerframe = (((playerframe&16) ? ((playerframe&8) ? 0xd8 : 0xdc) : ((playerframe&8) ? 0xd8 : 0xe0)));
     if (!moving)
       playerframe = 0xd8;
     metasprite(playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
@@ -272,7 +275,7 @@ void main(void) {
     // Hide unused sprites
     oam_hide_rest(oam_id);
     // Display again because my code is slow for some reason and can't render in time
-    display();
+    wait_frame();
     
     // Process entities
     for (i = 0; i < MAX_ENTITIES; i++) {

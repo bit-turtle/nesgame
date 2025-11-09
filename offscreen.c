@@ -60,7 +60,7 @@ void update_offscreen(byte dir) {
   byte x;
   // divide x_scroll by 8
   // to get nametable X position
-  x = ( (x_scroll>>3) - dir) & 63;
+  x = ( (x_scroll>>4<<1) - dir) & 63;
   // get address in either nametable A or B
   if (x < 32)
     addr = NTADR_A(x, 4);
