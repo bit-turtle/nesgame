@@ -38,29 +38,36 @@ extern byte music_data[];
 //#link "sprite.c"
 
 // Global Variables
+byte playerframe;
 word t_scroll = 0;
 const byte t_scroll_speed = 16;
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
-byte playerspeed = 1;
+byte playerspeed = 2;
 word playerx = 50;
 byte playery = 0;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
 byte playerhealth = 12;
+void dialogue(char* name, char* text);
 
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
   entity->y += playery-oldplayery;
 }
 
+void test(EntityState* entity) {
+  dialogue("Bobbert", "Hello There!");
+  entity;
+}
+
 const Entity entities[] = {
   // Null entity, nothing is rendered
   {0,0,NULL,NULL},
   // Entities
-  {0xfc, 0, NULL,NULL},
+  {0xfc, 0, test,NULL},
   {0xf4, 0, pushable,NULL}
 };
 
@@ -206,7 +213,6 @@ void controls() {
 
 void main(void) {
   word renderx_scroll;
-  byte playerframe = 0;
   byte i,j;
   // Set Pallete
   pal_all(PALETTE);
@@ -237,14 +243,10 @@ void main(void) {
   while(1) {
     // Scroll
     // Update Offscreen Tiles
-    if (x_scroll >= renderx_scroll+16 || x_scroll <= renderx_scroll-16) {
-      // Render
-      render_collumn(dir);
-      // Update
-      update_offscreen(dir);
-      // Renderx
-      renderx_scroll = x_scroll;
-    }
+    // Render
+    render_collumn(dir);
+    // Update
+    update_offscreen(dir);
     // Player health
     for (i = 0; i < playerhealth; i+=4) {
       j = 0x14+(playerhealth-i)%4;

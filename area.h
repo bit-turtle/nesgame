@@ -37,7 +37,7 @@ typedef struct Entity {
 
 const extern Entity entities[64];
 
-#define MAX_ENTITIES 6
+#define MAX_ENTITIES 10
 
 typedef struct Area {
   byte width;
