@@ -4,7 +4,7 @@
 
 extern byte oam_id;
 
-void sprite(byte ch, byte attr, word x, byte y);
+void sprite(word x, byte y, byte ch, byte attr);
 
 void metasprite(byte ch, byte attr, word x, byte y);
 

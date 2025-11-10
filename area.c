@@ -9,8 +9,8 @@ void render_collumn_ptr(const Collumn* collumn, const Collumn* collumn2, byte x,
   clear_attrbuf();
   for (y = 0; y < 12; y++) {
     set_metatile(y, tiles[collumn->rows[y]].chr);
-    set_attr_entry(x, y, tiles[collumn->rows[y]].attr);
-    set_attr_entry(x2, y, tiles[collumn2->rows[y]].attr);
+    set_attr_entry(x, y, tiles[collumn->rows[y]].attr & MASK);
+    set_attr_entry(x2, y, tiles[collumn2->rows[y]].attr & MASK);
   }
 }
 
@@ -31,7 +31,7 @@ const Tile tiles[] = {
   {0x98, 2 | AIR},	// 2: Path Bottom
   {0x9c, 2 | AIR},	// 3: Path
   {0xa0, 1 | SOLID},	// 4: Brick
-  {0xa4, 1},	// 5: Door
+  {0xa4, 1 | FIRE},	// 5: Door
 };
 
 const Collumn collumns[] = {

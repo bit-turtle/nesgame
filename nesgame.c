@@ -40,7 +40,7 @@ extern byte music_data[];
 // Global Variables
 byte playerframe;
 word t_scroll = 0;
-const byte t_scroll_speed = 16;
+#define t_scroll_speed 16
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
@@ -50,15 +50,23 @@ byte playery = 0;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
-byte playerhealth = 12;
+#define MAX_PLAYER_HEALTH 12
+byte playerhealth = MAX_PLAYER_HEALTH;
+#define DAMAGE_COOLDOWN 16
+byte damage_cooldown = 0;
 void damage(byte dmg) {
   byte i, j;
+  if (damage_cooldown != 0)
+    return;
+  damage_cooldown = DAMAGE_COOLDOWN;
   playerhealth -= dmg;
   if (playerhealth > 0xf0)
     playerhealth = 0;
   // Player health
-  for (i = 0; i < playerhealth; i+=4) {
-    if (playerhealth - i > 4)
+  for (i = 0; i < MAX_PLAYER_HEALTH; i+=4) {
+    if (i > playerhealth)
+      j = 0x14;
+    else if (playerhealth - i > 4)
       j = 0x18;
     else
       j = 0x14+(playerhealth-i)%5;
@@ -102,7 +110,7 @@ const char PALETTE[32] = {
   0x0F,0x27,0x2A,0x00,
 
   0x06,0x37,0x24,0x00,	// sprite colors
-  0x00,0x37,0x25,0x00,
+  0x16,0x36,0x34,0x00,
   0x0F,0x2D,0x1A,0x00,
   0x0F,0x27,0x2A
 };
@@ -137,11 +145,14 @@ void dialogue(char* name, char* text) {
     wait_frame();
   }
   counter = 0;
+  val = 0;
   do {
     counter++;
-    if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
-    else vrambuf_put(NTADR_B(29,3), "\x3", 1);
-    val = pad_poll(0);
+    if (playerhealth != 0) {
+    	if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
+    	else vrambuf_put(NTADR_B(29,3), "\x3", 1);
+    	val = pad_poll(0);
+    }
     wait_frame();
   } while (!val);
   vrambuf_put(NTADR_B(29,3), "\x3", 1);
@@ -254,34 +265,37 @@ void main(void) {
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
   // Initial health
-  playerhealth = 12;
+  playerhealth = MAX_PLAYER_HEALTH;
   damage(0);
-  while(1) {
+  damage_cooldown = 0;
+  while(playerhealth != 0) {
     // Scroll
     // Update Offscreen Tiles
     // Render
     render_collumn(dir);
     // Update
-    update_offscreen(dir);
     
     // Render
     wait_frame();
+    update_offscreen(dir);    
     
     // Update Game
+    if (damage_cooldown != 0)
+      damage_cooldown--;
     // Controls
     controls();
     player_scroll();
     playerframe = (playerx != oldplayerx) ? playerx : ((playery != oldplayery) ? playery : 0);
     playerframe*=2;
-    playerframe = (((playerframe&16) ? ((playerframe&8) ? 0xd8 : 0xdc) : ((playerframe&8) ? 0xd8 : 0xe0)));
-    if (!moving)
-      playerframe = 0xd8;
-    metasprite(playerframe, 0 | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+    if (moving)
+      playerframe++;
+    else
+      playerframe = 24;
+    
+    metasprite((((playerframe&16) ? ((playerframe&8) ? 0xd8 : 0xdc) : ((playerframe&8) ? 0xd8 : 0xe0))), ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     
     // Render entities
     for (i = 0; i < MAX_ENTITIES; i++) {
-      if (current_entities[i].entity == 0)
-        continue;
       // Render
       metasprite(entities[current_entities[i].entity].chr, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
     }
@@ -303,11 +317,16 @@ void main(void) {
     }
     
     // Process tile
-    
-    
-    // Display again because my code is slow for some reason and can't render in time
-    wait_frame();
-    
+    i = tiles[collumns[areas[area].collumns[(playerx+8)>>4]].rows[(playery+8)>>4]].attr;
+    if (i & FIRE)
+      damage(1);
+    if (i & SOLID) {
+      playerx = oldplayerx;
+      playery = oldplayery;
+    }
     
   }
+  wait_frame();
+  // Game Over
+  dialogue("GAME OVER", "Better Luck Next Time!");
 }
