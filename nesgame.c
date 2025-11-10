@@ -51,8 +51,24 @@ bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
 byte playerhealth = 12;
+void damage(byte dmg) {
+  byte i, j;
+  playerhealth -= dmg;
+  if (playerhealth > 0xf0)
+    playerhealth = 0;
+  // Player health
+  for (i = 0; i < playerhealth; i+=4) {
+    if (playerhealth - i > 4)
+      j = 0x18;
+    else
+      j = 0x14+(playerhealth-i)%5;
+    vrambuf_put(NTADR_A(2+(i>>2),2), &j, 1);
+  }
+}
+// Pre def
 void dialogue(char* name, char* text);
-
+void load_area(word x, byte y);
+// Entity Callbacks
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
   entity->y += playery-oldplayery;
@@ -63,6 +79,7 @@ void test(EntityState* entity) {
   entity;
 }
 
+// Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
   {0,0,NULL,NULL},
@@ -89,10 +106,6 @@ const char PALETTE[32] = {
   0x0F,0x2D,0x1A,0x00,
   0x0F,0x27,0x2A
 };
-
-bool compareword(word a, word b) {
-  return a == b && a>>8 == b>>8;
-}
 
 void wait_frame() {
   // reset oam_id
@@ -213,7 +226,7 @@ void controls() {
 
 void main(void) {
   word renderx_scroll;
-  byte i,j;
+  byte i;
   // Set Pallete
   pal_all(PALETTE);
   // VRAM Initialization
@@ -240,6 +253,9 @@ void main(void) {
   // Reset newx_scroll
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
+  // Initial health
+  playerhealth = 12;
+  damage(0);
   while(1) {
     // Scroll
     // Update Offscreen Tiles
@@ -247,11 +263,7 @@ void main(void) {
     render_collumn(dir);
     // Update
     update_offscreen(dir);
-    // Player health
-    for (i = 0; i < playerhealth; i+=4) {
-      j = 0x14+(playerhealth-i)%4;
-      vrambuf_put(NTADR_A(2+(i>>2),2), &j, 1);
-    }
+    
     // Render
     wait_frame();
     
@@ -276,8 +288,6 @@ void main(void) {
     
     // Hide unused sprites
     oam_hide_rest(oam_id);
-    // Display again because my code is slow for some reason and can't render in time
-    wait_frame();
     
     // Process entities
     for (i = 0; i < MAX_ENTITIES; i++) {
@@ -291,5 +301,13 @@ void main(void) {
         entities[current_entities[i].entity].tick(&current_entities[i]);
       }
     }
+    
+    // Process tile
+    
+    
+    // Display again because my code is slow for some reason and can't render in time
+    wait_frame();
+    
+    
   }
 }
