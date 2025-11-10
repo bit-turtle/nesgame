@@ -4,16 +4,19 @@
 
 #include "neslib.h"
 
-// Tile Types
-#define AIR	0b00000000
+// Tile Attributes
+#define GROUND	0b00000000
 #define SOLID	0b10000000
 #define FIRE	0b01000000
-#define DOOR	0b00100000
-//		    |-|
-#define DOOR0	0b00000000 | DOOR
-#define DOOR1	0b00001000 | DOOR
-#define DOOR2	0b00010000 | DOOR
-#define DOOR3	0b00011000 | DOOR
+#define DOOR	0b00111000
+#define DOOR1	0b00001000
+#define DOOR2	0b00010000
+#define DOOR3	0b00011000
+#define DOOR4	0b00100000
+#define DOOR5	0b00101000
+#define DOOR6	0b00110000
+#define DOOR7	0b00111000
+#define DoorIndex(attr) ( ((attr&DOOR) >> 3) - 1)
 #define LOCKED	0b00000100
 // Attribute Mask
 #define MASK	0b00000011
@@ -62,7 +65,7 @@ typedef struct Area {
   byte width;
   byte collumns[64];	// list of collumns from list above
   EntityState entities[MAX_ENTITIES];
-  Door doors[4];
+  Door doors[7];
 } Area;
 
 const extern Area areas[32];

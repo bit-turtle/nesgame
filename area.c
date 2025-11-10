@@ -26,12 +26,12 @@ void render_collumn(byte dir){
 }
 
 const Tile tiles[] = {
-  {0x90, 0 | AIR},	// 0: Grass
-  {0x94, 2 | AIR},	// 1: Path Top
-  {0x98, 2 | AIR},	// 2: Path Bottom
-  {0x9c, 2 | AIR},	// 3: Path
+  {0x90, 0 | GROUND},	// 0: Grass
+  {0x94, 2 | GROUND},	// 1: Path Top
+  {0x98, 2 | GROUND},	// 2: Path Bottom
+  {0x9c, 2 | GROUND},	// 3: Path
   {0xa0, 1 | SOLID},	// 4: Brick
-  {0xa4, 1 | FIRE},	// 5: Door
+  {0xa4, 1 | DOOR1},	// 5: Door
 };
 
 const Collumn collumns[] = {
@@ -50,9 +50,9 @@ const Collumn collumns[] = {
 };
 
 const Area areas[] = {
-  {
+  { // Starting Area
     64, {1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2},
-    {
+    { // Entities
       {2, 100,100},
       {2, 100,100},
       {2, 100,100},
@@ -63,6 +63,9 @@ const Area areas[] = {
       {2, 100,100},
       {2, 100,100},
       {2, 100,100}
+    },
+    { // Doors
+      {0,0,0}
     }
   }
 };

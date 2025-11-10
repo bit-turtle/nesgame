@@ -38,6 +38,7 @@ extern byte music_data[];
 //#link "sprite.c"
 
 // Global Variables
+byte keys = 0;
 byte playerframe;
 word t_scroll = 0;
 #define t_scroll_speed 16
@@ -59,8 +60,9 @@ void damage(byte dmg) {
   if (damage_cooldown != 0)
     return;
   damage_cooldown = DAMAGE_COOLDOWN;
+  i = playerhealth;
   playerhealth -= dmg;
-  if (playerhealth > 0xf0)
+  if (playerhealth > i)
     playerhealth = 0;
   // Player health
   for (i = 0; i < MAX_PLAYER_HEALTH; i+=4) {
@@ -75,7 +77,7 @@ void damage(byte dmg) {
 }
 // Pre def
 void dialogue(char* name, char* text);
-void load_area(word x, byte y);
+void load_area(byte newarea, word x, byte y);
 // Entity Callbacks
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
@@ -173,14 +175,15 @@ void player_scroll() {
       x_scroll = newx_scroll;
 }
 
-void load_area(word x, byte y) {
+void load_area(byte newarea, word x, byte y) {
   byte i;
   word final_scroll;
+  area = newarea;
   playerx = x;
   playery = y;
   player_scroll();
   final_scroll = x_scroll;
-  x_scroll += 32*8;
+  x_scroll += 32*9;
   while(x_scroll != final_scroll) {
     // Scroll
     if (t_scroll > 256) t_scroll+=t_scroll_speed;
@@ -260,7 +263,7 @@ void main(void) {
   //enable rendering
   ppu_on_all();
   // repeat forever
-  load_area(5*TILE_SIZE,6*TILE_SIZE-8);
+  load_area(0, 5*TILE_SIZE,6*TILE_SIZE-8);
   // Reset newx_scroll
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
@@ -268,7 +271,7 @@ void main(void) {
   playerhealth = MAX_PLAYER_HEALTH;
   damage(0);
   damage_cooldown = 0;
-  while(playerhealth != 0) {
+  while(!(playerhealth == 0 && damage_cooldown == 0)) {
     // Scroll
     // Update Offscreen Tiles
     // Render
@@ -280,8 +283,6 @@ void main(void) {
     update_offscreen(dir);    
     
     // Update Game
-    if (damage_cooldown != 0)
-      damage_cooldown--;
     // Controls
     controls();
     player_scroll();
@@ -324,6 +325,16 @@ void main(void) {
       playerx = oldplayerx;
       playery = oldplayery;
     }
+    if (i & DOOR && (!(i & LOCKED) || ((i&LOCKED) && keys > 0) ) ) {
+      if (i&LOCKED) keys--;
+      i = DoorIndex(i);
+      load_area(areas[area].doors[i].area,areas[area].doors[i].x,areas[area].doors[i].y);
+    }
+    
+    // Damage Cooldown
+    
+    if (damage_cooldown != 0)
+      damage_cooldown--;
     
   }
   wait_frame();
