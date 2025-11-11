@@ -31,7 +31,7 @@ const Tile tiles[] = {
   {0x98, 2 | GROUND},	// 2: Path Bottom
   {0x9c, 2 | GROUND},	// 3: Path
   {0xa0, 1 | SOLID},	// 4: Brick
-  {0xa4, 1 | DOOR1},	// 5: Door
+  {0xa4, 1 | DOOR1 | LOCKED},	// 5: Door
 };
 
 const Collumn collumns[] = {
@@ -53,7 +53,7 @@ const Area areas[] = {
   { // Starting Area
     64, {1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2},
     { // Entities
-      {2, 100,100},
+      {1, 50,100},
       {2, 100,100},
       {2, 100,100},
       {2, 100,100},

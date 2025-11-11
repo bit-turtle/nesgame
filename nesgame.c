@@ -38,16 +38,27 @@ extern byte music_data[];
 //#link "sprite.c"
 
 // Global Variables
-byte keys = 0;
-byte playerframe;
+byte keys = 4;
+void update_keys(byte num) {
+  char disp[2] = "\x19 ";
+  keys = num;
+  disp[1] = 0x30 + keys;
+  vrambuf_put(NTADR_A(28,2), disp, 2);
+}
+byte anim;
 word t_scroll = 0;
 #define t_scroll_speed 16
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
-byte playerspeed = 2;
+#define PLAYER_WALK 2
+#define PLAYER_RUN 3
+#define PLAYER_RUN_MIN_HEALTH 4
+#define HORSE 6
+byte playerspeed = 6;
 word playerx = 50;
 byte playery = 0;
+bool horse = false;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
@@ -84,18 +95,26 @@ void pushable(EntityState* entity) {
   entity->y += playery-oldplayery;
 }
 
-void test(EntityState* entity) {
-  dialogue("Bobbert", "Hello There!");
-  entity;
+void horse_mount(EntityState* entity) {
+  if (!horse) {
+    horse = true;
+    entity->entity = 0;
+    playery = entity->y;
+  }
+}
+
+void random_stroll(EntityState* entity) {
+  entity->x += rand8()%3-1;
+  entity->y += rand8()%3-1;
 }
 
 // Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
-  {0,0,NULL,NULL},
+  {0x1a,0,NULL,NULL},
   // Entities
-  {0xfc, 0, test,NULL},
-  {0xf4, 0, pushable,NULL}
+  {0xe8, 0, horse_mount, NULL},	// 1: Horse
+  {0xf4, 0, pushable, 0} // 2: Pushable block
 };
 
 #define CENTER 119
@@ -210,6 +229,20 @@ void controls() {
   oldplayerx = playerx;
   oldplayery = playery;
   moving = false;
+  if (state&PAD_B)
+    if (horse) {
+      current_entities[MAX_ENTITIES-1].entity = 1;
+      current_entities[MAX_ENTITIES-1].x = playerx;
+      current_entities[MAX_ENTITIES-1].y = playery;
+      playery += 8;
+      horse = false;
+    }
+    else if (playerhealth >= PLAYER_RUN_MIN_HEALTH)
+      playerspeed = PLAYER_RUN;
+    else
+      playerspeed = PLAYER_WALK;
+  else
+    playerspeed = horse ? HORSE : PLAYER_WALK;
   if (state&PAD_RIGHT) {
     playerx+=playerspeed;
     dir = RIGHT;
@@ -271,6 +304,8 @@ void main(void) {
   playerhealth = MAX_PLAYER_HEALTH;
   damage(0);
   damage_cooldown = 0;
+  // Initial Keys
+  update_keys(keys);
   while(!(playerhealth == 0 && damage_cooldown == 0)) {
     // Scroll
     // Update Offscreen Tiles
@@ -286,14 +321,13 @@ void main(void) {
     // Controls
     controls();
     player_scroll();
-    playerframe = (playerx != oldplayerx) ? playerx : ((playery != oldplayery) ? playery : 0);
-    playerframe*=2;
-    if (moving)
-      playerframe++;
-    else
-      playerframe = 24;
+    anim++;
     
-    metasprite((((playerframe&16) ? ((playerframe&8) ? 0xd8 : 0xdc) : ((playerframe&8) ? 0xd8 : 0xe0))), ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+    // Player walk
+    if (horse)
+      metasprite((moving && anim&4) ? 0xec : 0xe4, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+    else
+      metasprite((moving) ? ((( (anim*playerspeed) &8) ? (( (anim*playerspeed) &4) ? 0xd8 : 0xdc) : (( (anim*playerspeed) &4) ? 0xd8 : 0xe0))) : 0xd8, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     
     // Render entities
     for (i = 0; i < MAX_ENTITIES; i++) {
@@ -325,10 +359,21 @@ void main(void) {
       playerx = oldplayerx;
       playery = oldplayery;
     }
-    if (i & DOOR && (!(i & LOCKED) || ((i&LOCKED) && keys > 0) ) ) {
-      if (i&LOCKED) keys--;
-      i = DoorIndex(i);
-      load_area(areas[area].doors[i].area,areas[area].doors[i].x,areas[area].doors[i].y);
+    if (i & DOOR ) {
+      wait_frame();
+      if (i&LOCKED && keys == 0) {
+        dialogue("Door is locked", "It seems you need a key");
+        playerx = oldplayerx;
+        playery = oldplayery;
+      }
+      else {
+        if (i&LOCKED) {
+          dialogue("Door unlocked!", "The small key turns to dust");
+          update_keys(keys-1);
+        }
+        i = DoorIndex(i);
+        load_area(areas[area].doors[i].area,areas[area].doors[i].x,areas[area].doors[i].y);
+      }
     }
     
     // Damage Cooldown
