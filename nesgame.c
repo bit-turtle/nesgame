@@ -234,7 +234,7 @@ void controls() {
   byte state = pad_poll(0);
   oldplayerx = playerx;
   oldplayery = playery;
-  moving = false;
+  moving = true;
   if (state&PAD_B)
     if (horse) {
       current_entities[HORSE_INDEX].entity = 1;
@@ -243,6 +243,8 @@ void controls() {
       horse_area = area;
       playery += 8;
       horse = false;
+      playerspeed = 0;
+      moving = false;
     }
     else if (playerhealth >= PLAYER_RUN_MIN_HEALTH)
       playerspeed = PLAYER_RUN;
@@ -250,31 +252,34 @@ void controls() {
       playerspeed = PLAYER_WALK;
   else
     playerspeed = horse ? HORSE : PLAYER_WALK;
-  if (state&PAD_RIGHT) {
-    playerx+=playerspeed;
-    dir = RIGHT;
-    if (playerx>>4>=areas[area].width-1)
-      playerx = areas[area].width-1<<4;
-    moving = true;
-  }
-  if (state&PAD_LEFT) {
-    playerx-=playerspeed;
-    dir = LEFT;
-    if (playerx > 256<<4)
-      playerx = 0;
-    moving = true;
-  }
-  if (state&PAD_UP) {
-    playery-=playerspeed;
-    if (playery > oldplayery)
-      playery = 0;
-    moving = true;
-  }
-  if (state&PAD_DOWN) {
-    playery+=playerspeed;
-    if (playery > 22*8)
-      playery = 22*8;
-    moving = true;
+  if (moving) {
+    moving = false;
+    if (state&PAD_RIGHT) {
+      playerx+=playerspeed;
+      dir = RIGHT;
+      if (playerx>>4>=areas[area].width-1)
+        playerx = areas[area].width-1<<4;
+      moving = true;
+    }
+    if (state&PAD_LEFT) {
+      playerx-=playerspeed;
+      dir = LEFT;
+      if (playerx > 256<<4)
+        playerx = 0;
+      moving = true;
+    }
+    if (state&PAD_UP) {
+      playery-=playerspeed;
+      if (playery > oldplayery)
+        playery = 0;
+      moving = true;
+    }
+    if (state&PAD_DOWN) {
+      playery+=playerspeed;
+      if (playery > 22*8)
+        playery = 22*8;
+      moving = true;
+    }
   }
 }
 
