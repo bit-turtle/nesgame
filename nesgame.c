@@ -119,7 +119,9 @@ const Entity entities[] = {
 
 #define CENTER 119
 
-EntityState current_entities[MAX_ENTITIES];
+#define HORSE_INDEX MAX_ENTITIES
+EntityState current_entities[MAX_ENTITIES+1];
+byte horse_area = 0;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -216,7 +218,11 @@ void load_area(byte newarea, word x, byte y) {
     wait_frame();
   }
   for (i = 0; i < MAX_ENTITIES; i++) {
-    current_entities[i] = areas[area].entities[i];
+    // The one horse to rule them all
+    if (areas[area].entities[i].entity == 1 && (horse || current_entities[HORSE_INDEX].entity == 1))
+      current_entities[i].entity = 0;
+    else
+      current_entities[i] = areas[area].entities[i];
   }
 }
 
@@ -231,9 +237,10 @@ void controls() {
   moving = false;
   if (state&PAD_B)
     if (horse) {
-      current_entities[MAX_ENTITIES-1].entity = 1;
-      current_entities[MAX_ENTITIES-1].x = playerx;
-      current_entities[MAX_ENTITIES-1].y = playery;
+      current_entities[HORSE_INDEX].entity = 1;
+      current_entities[HORSE_INDEX].x = playerx;
+      current_entities[HORSE_INDEX].y = playery;
+      horse_area = area;
       playery += 8;
       horse = false;
     }
@@ -304,6 +311,8 @@ void main(void) {
   playerhealth = MAX_PLAYER_HEALTH;
   damage(0);
   damage_cooldown = 0;
+  // initial horse
+  
   // Initial Keys
   update_keys(keys);
   while(!(playerhealth == 0 && damage_cooldown == 0)) {
@@ -327,10 +336,10 @@ void main(void) {
     if (horse)
       metasprite((moving && anim&4) ? 0xec : 0xe4, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     else
-      metasprite((moving) ? ((( (anim*playerspeed) &8) ? (( (anim*playerspeed) &4) ? 0xd8 : 0xdc) : (( (anim*playerspeed) &4) ? 0xd8 : 0xe0))) : 0xd8, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+      metasprite((moving) ? ((( (anim*(playerspeed-1)) &8) ? (( (anim*(playerspeed-1)) &4) ? 0xd8 : 0xdc) : (( (anim*(playerspeed-1)) &4) ? 0xd8 : 0xe0))) : 0xd8, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     
     // Render entities
-    for (i = 0; i < MAX_ENTITIES; i++) {
+    for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {
       // Render
       metasprite(entities[current_entities[i].entity].chr, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
     }
@@ -339,7 +348,7 @@ void main(void) {
     oam_hide_rest(oam_id);
     
     // Process entities
-    for (i = 0; i < MAX_ENTITIES; i++) {
+    for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {
       if (current_entities[i].entity == 0)
         continue;
       // Process
@@ -363,6 +372,11 @@ void main(void) {
       wait_frame();
       if (i&LOCKED && keys == 0) {
         dialogue("Door is locked", "It seems you need a key");
+        playerx = oldplayerx;
+        playery = oldplayery;
+      }
+      else if (horse) {
+        dialogue("Horse is too big", "Your horse can't fit!");
         playerx = oldplayerx;
         playery = oldplayery;
       }

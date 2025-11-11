@@ -55,6 +55,13 @@ const extern Entity entities[64];
 
 #define MAX_ENTITIES 10
 
+#define LEFT_AREA_DOOR 0
+#define RIGHT_AREA_DOOR 1
+#define TOP_AREA_DOOR 2
+#define BOTTOM_AREA_DOOR 3
+
+#define SMALL_DOOR 0b100
+
 typedef struct Door {
   byte area;
   word x;
