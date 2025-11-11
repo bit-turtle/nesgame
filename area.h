@@ -5,17 +5,22 @@
 #include "neslib.h"
 
 // Tile Attributes
-#define GROUND	0b00000000
-#define SOLID	0b10000000
-#define FIRE	0b01000000
-#define DOOR	0b00111000
-#define DOOR1	0b00001000
-#define DOOR2	0b00010000
-#define DOOR3	0b00011000
-#define DOOR4	0b00100000
-#define DOOR5	0b00101000
-#define DOOR6	0b00110000
-#define DOOR7	0b00111000
+#define GROUND		0b00000000
+#define SOLID		0b10000000
+#define FIRE		0b01000000
+#define DOOR		0b00111000
+#define DOOR1		0b00001000
+#define DOOR2		0b00010000
+#define DOOR3		0b00011000
+#define DOOR4		0b00100000
+#define RIGHT_DOOR	DOOR4
+#define DOOR5		0b00101000
+#define LEFT_DOOR	DOOR5
+#define DOOR6		0b00110000
+#define TOP_DOOR	DOOR6
+#define DOOR7		0b00111000
+#define BOTTOM_DOOR	DOOR7
+#define LARGE_DOOR	0b00100000	// Doors 1-3: Small, Doors 4-7 Large
 #define DoorIndex(attr) ( ((attr&DOOR) >> 3) - 1)
 #define LOCKED	0b00000100
 // Attribute Mask
@@ -42,6 +47,7 @@ typedef struct EntityState {
   byte entity;
   word x;
   byte y;
+  byte chr_offset;
 } EntityState;
 
 typedef struct Entity {
@@ -55,12 +61,7 @@ const extern Entity entities[64];
 
 #define MAX_ENTITIES 6
 
-#define LEFT_AREA_DOOR 0
-#define RIGHT_AREA_DOOR 1
-#define TOP_AREA_DOOR 2
-#define BOTTOM_AREA_DOOR 3
-
-#define SMALL_DOOR 0b100
+#define NULL_AREA 0xff
 
 typedef struct Door {
   byte area;

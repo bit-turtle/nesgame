@@ -37,6 +37,11 @@ extern byte music_data[];
 #include "sprite.h"
 //#link "sprite.c"
 
+// Flags
+#include "flags.h"
+//#link "flags.c"
+
+
 // Global Variables
 byte keys = 4;
 void update_keys(byte num) {
@@ -51,10 +56,13 @@ word t_scroll = 0;
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
-#define PLAYER_WALK 2
-#define PLAYER_RUN 3
+#define PLAYER_WALK 1
+#define PLAYER_RUN 2
+#define PLAYER_WALK_ANIM_SPEED 1
+#define PLAYER_RUN_ANIM_SPEED 2
 #define PLAYER_RUN_MIN_HEALTH 4
 #define HORSE 6
+#define HORSE_STEAL_DISTANCE 12
 byte playerspeed = 6;
 word playerx = 50;
 byte playery = 0;
@@ -96,6 +104,8 @@ void pushable(EntityState* entity) {
 }
 
 void horse_mount(EntityState* entity) {
+  if (!(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)))
+    dialogue("Bobbert", "That's my horse!");
   if (!horse) {
     horse = true;
     entity->entity = 0;
@@ -103,9 +113,27 @@ void horse_mount(EntityState* entity) {
   }
 }
 
-void random_stroll(EntityState* entity) {
-  entity->x += rand8()%3-1;
-  entity->y += rand8()%3-1;
+void bobbert_walk(EntityState* entity) {
+  // Anim
+  entity->chr_offset = (anim&4) ? 4 : 0;
+  if (entity->x < 27*TILE_SIZE) {
+    entity->x++;
+    if (entity->y > 6*TILE_SIZE-8)
+      entity->y--;
+    else if (entity->y < 6*TILE_SIZE-8)
+      entity->y++;
+  }
+  else if (entity->y > 1*TILE_SIZE)
+    entity->y--;
+  else {
+    entity->entity = 2;	// Standstill
+    entity->chr_offset = 0;
+    dialogue("Bobbert", "This is my house");
+  }
+}
+
+void bobbert_save(EntityState* entity) {
+  entity->x--;
 }
 
 // Entities
@@ -114,7 +142,10 @@ const Entity entities[] = {
   {0x1a,0,NULL,NULL},
   // Entities
   {0xe8, 0, horse_mount, NULL},	// 1: Horse
-  {0xf4, 0, pushable, 0} // 2: Pushable block
+  // 2-4: Bobbert
+  {0xfc, 0, NULL, NULL}, // 2: Bobbert standstill
+  {0xf8, 0, NULL, bobbert_walk}, // 3: Bobbert walk to house
+  {0xf8, 0 | OAM_FLIP_H, NULL, bobbert_save}
 };
 
 #define CENTER 119
@@ -155,6 +186,7 @@ void start_frame() {
 
 void dialogue(char* name, char* text) {
   register byte counter, val;
+  wait_frame();
   vrambuf_put(NTADR_B(2,1), "                            ", 29);
   vrambuf_put(NTADR_B(2,1), name, strlen(name));
   vrambuf_put(NTADR_B(2,2), "                            ", 29);
@@ -280,6 +312,12 @@ void controls() {
         playery = 22*8;
       moving = true;
     }
+    
+    // Bobbert horse theif
+    if (horse && !(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)) && (playerx > (28+HORSE_STEAL_DISTANCE)*TILE_SIZE || playerx < (28-HORSE_STEAL_DISTANCE)*TILE_SIZE)) {
+      dialogue("Bobbert", "Get back here you thief!");
+      flags[BOBBERT] |= HORSE_STOLEN;
+    }
   }
 }
 
@@ -308,7 +346,7 @@ void main(void) {
   //enable rendering
   ppu_on_all();
   // repeat forever
-  load_area(0, 5*TILE_SIZE,6*TILE_SIZE-8);
+  load_area(0, 6*TILE_SIZE,6*TILE_SIZE-8);
   // Reset newx_scroll
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
@@ -343,12 +381,12 @@ void main(void) {
     if (horse)
       metasprite((moving && anim&4) ? 0xec : 0xe4, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     else
-      metasprite((moving) ? ((( (anim*(playerspeed-1)) &8) ? (( (anim*(playerspeed-1)) &4) ? 0xd8 : 0xdc) : (( (anim*(playerspeed-1)) &4) ? 0xd8 : 0xe0))) : 0xd8, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
+      metasprite((moving) ? ((( (anim*(playerspeed == PLAYER_WALK ? PLAYER_WALK_ANIM_SPEED : PLAYER_RUN_ANIM_SPEED)) &8) ? (( (anim*(playerspeed == PLAYER_WALK ? PLAYER_WALK_ANIM_SPEED : PLAYER_RUN_ANIM_SPEED)) &4) ? 0xd8 : 0xdc) : (( (anim*(playerspeed == PLAYER_WALK ? PLAYER_WALK_ANIM_SPEED : PLAYER_RUN_ANIM_SPEED)) &4) ? 0xd8 : 0xe0))) : 0xd8, ((damage_cooldown & 2) ? 1 : 0) | (dir == LEFT ? OAM_FLIP_H : 0), playerx, playery);
     
     // Render entities
     for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {
       // Render
-      metasprite(entities[current_entities[i].entity].chr, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
+      metasprite(entities[current_entities[i].entity].chr+current_entities[i].chr_offset, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
     }
     
     // Hide unused sprites
@@ -382,7 +420,7 @@ void main(void) {
         playerx = oldplayerx;
         playery = oldplayery;
       }
-      else if (horse) {
+      else if (horse && !(i&LARGE_DOOR) ) {
         dialogue("Horse is too big", "Your horse can't fit!");
         playerx = oldplayerx;
         playery = oldplayery;

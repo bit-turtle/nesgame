@@ -51,12 +51,16 @@ const Collumn collumns[] = {
 
 const Area areas[] = {
   { // Starting Area
-    64, {1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2},
+    64, {0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2},
     { // Entities
       {1, 31*TILE_SIZE-8, 2*TILE_SIZE},	// Bobbert's Horse
+      {3, 1*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
     },
     { // Doors
-      {0,0,0}
+      {0,0,0},
+      {NULL_AREA},{NULL_AREA},	// Unused
+      {}, // Right
+      {NULL_AREA},{NULL_AREA},{NULL_AREA} // Unused
     }
   }
 };
