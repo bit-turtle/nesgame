@@ -134,7 +134,7 @@ const char PALETTE[32] = {
 
   0x06,0x37,0x24,0x00,	// sprite colors
   0x16,0x36,0x34,0x00,
-  0x0F,0x2D,0x1A,0x00,
+  0x29,0x2B,0x1A,0x00,
   0x0F,0x27,0x2A
 };
 
@@ -328,14 +328,16 @@ void main(void) {
     // Update
     
     // Render
-    wait_frame();
-    update_offscreen(dir);    
     
-    // Update Game
+    update_offscreen(dir); 
     // Controls
     controls();
-    player_scroll();
     anim++;
+    
+    wait_frame();
+    player_scroll();
+    
+    // Update Game
     
     // Player walk
     if (horse)

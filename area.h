@@ -53,7 +53,7 @@ typedef struct Entity {
 
 const extern Entity entities[64];
 
-#define MAX_ENTITIES 10
+#define MAX_ENTITIES 6
 
 #define LEFT_AREA_DOOR 0
 #define RIGHT_AREA_DOOR 1
