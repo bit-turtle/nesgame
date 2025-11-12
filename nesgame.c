@@ -57,7 +57,7 @@ word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
 #define PLAYER_WALK 1
-#define PLAYER_RUN 2
+#define PLAYER_RUN 3
 #define PLAYER_WALK_ANIM_SPEED 1
 #define PLAYER_RUN_ANIM_SPEED 2
 #define PLAYER_RUN_MIN_HEALTH 10
@@ -123,8 +123,10 @@ void pushable(EntityState* entity) {
 }
 
 void horse_mount(EntityState* entity) {
-  if (!(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)))
+  if (!(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN))) {
     dialogue("Bobbert", "Hey! That's my horse!");
+    dialogue("Bobbert", "You aren't a thief, right?");
+  }
   if (!horse) {
     horse = true;
     entity->entity = 0;
@@ -410,7 +412,7 @@ void controls() {
   oldplayerx = playerx;
   oldplayery = playery;
   moving = true;
-  if (state&PAD_B)
+  if (state&PAD_B && flags[BOBBERT]&PLAYER_SAVED)
     if (horse) {
       current_entities[HORSE_INDEX].entity = 1;
       current_entities[HORSE_INDEX].x = playerx;
@@ -466,6 +468,7 @@ void controls() {
     // Bobbert horse thief
     if (horse && !(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)) && (playerx > (28+HORSE_STEAL_DISTANCE)*TILE_SIZE || playerx < (28-HORSE_STEAL_DISTANCE)*TILE_SIZE)) {
       dialogue("Bobbert", "Get back here you thief!");
+      dialogue("Hard Mode Activated", "You are now a horse thief");
       flags[BOBBERT] |= HORSE_STOLEN;
     }
   }
