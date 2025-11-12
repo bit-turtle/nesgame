@@ -63,7 +63,7 @@ byte dir = RIGHT;
 #define PLAYER_RUN_MIN_HEALTH 10
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
-#define SPIDER_DAMAGE 1
+#define SPIDER_DAMAGE 3
 byte playerspeed = 6;
 word playerx = 50;
 byte playery = 0;
@@ -137,7 +137,7 @@ void bobbert_walk(EntityState* entity) {
   entity->chr_offset = (anim&4) ? 4 : 0;
   if (entity->x > playerx+6*TILE_SIZE) {
     if (!(flags[BOBBERT]&PLAYER_SLOW)) {
-      dialogue("Bobbert", "You coming or not?");
+      dialogue("?", "You coming or not?");
     	flags[BOBBERT] |= PLAYER_SLOW;
     }
     entity->chr_offset = 4;
@@ -154,7 +154,8 @@ void bobbert_walk(EntityState* entity) {
   else {
     entity->entity = 2;	// Standstill
     entity->chr_offset = 0;
-    dialogue("Bobbert", "My soup will heal you");
+    dialogue("?", "My soup will heal you");
+    dialogue("Bobbert", "By the way, I'm Bobbert");
   }
 }
 
@@ -188,7 +189,7 @@ void bobbert_save(EntityState* entity) {
     else {
       entity->entity = 3;
       flags[BOBBERT] |= PLAYER_SAVED;
-      dialogue("Bobbert", "Lets get you fixed up");
+      dialogue("?", "Follow me");
      return;
    }
     
@@ -229,8 +230,8 @@ void soup_pot(EntityState*) {
     if (!(flags[BOBBERT]&HORSE_LENT)) {
       dialogue("Bobbert", "Could you do a favor for me?");
       dialogue("Bobbert", "Deliver this to the king");
-      dialogue("Bobbert", "It's a top secret message");
-      dialogue("Bobbert", "You can ride my horse");
+      dialogue("Bobbert", "It's an important message");
+      dialogue("Bobbert", "Also, you can ride my horse");
       flags[BOBBERT] |= HORSE_LENT;
     }
   }
