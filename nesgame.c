@@ -60,29 +60,41 @@ byte dir = RIGHT;
 #define PLAYER_RUN 2
 #define PLAYER_WALK_ANIM_SPEED 1
 #define PLAYER_RUN_ANIM_SPEED 2
-#define PLAYER_RUN_MIN_HEALTH 4
+#define PLAYER_RUN_MIN_HEALTH 10
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
+#define SPIDER_DAMAGE 1
 byte playerspeed = 6;
 word playerx = 50;
 byte playery = 0;
+bool collision(word x1, byte y1, word x2, byte y2) {
+  return (x1+8 < x2+16 && x1+8 >= x2 && y1+8 < y2+16 && y1+8 >= y2);
+}
+bool player_collision(word x, byte y) {
+  return (playerx+8 < x+16 && playerx+8 >= x && playery+8 < y+16 && playery+8 >= y);
+}
 bool horse = false;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
 #define MAX_PLAYER_HEALTH 12
 byte playerhealth = MAX_PLAYER_HEALTH;
-#define DAMAGE_COOLDOWN 16
+#define DAMAGE_COOLDOWN 12
 byte damage_cooldown = 0;
 void damage(byte dmg) {
   byte i, j;
   if (damage_cooldown != 0)
     return;
   damage_cooldown = DAMAGE_COOLDOWN;
+  playerx = oldplayerx;
+  playery = oldplayery;
   i = playerhealth;
   playerhealth -= dmg;
-  if (playerhealth > i)
+  if (playerhealth > i) {
     playerhealth = 0;
+  }
+  if (playerhealth == 0 && !(flags[BOBBERT]&PLAYER_SAVED))
+    playerhealth = 1;
   // Player health
   for (i = 0; i < MAX_PLAYER_HEALTH; i+=4) {
     if (i > playerhealth)
@@ -94,6 +106,12 @@ void damage(byte dmg) {
     vrambuf_put(NTADR_A(2+(i>>2),2), &j, 1);
   }
 }
+
+#define CENTER 119
+
+#define HORSE_INDEX MAX_ENTITIES
+EntityState current_entities[MAX_ENTITIES+1];
+byte horse_area = 0;
 // Pre def
 void dialogue(char* name, char* text);
 void load_area(byte newarea, word x, byte y);
@@ -146,18 +164,45 @@ void player_pushback() {
 }
 
 void bobbert_save(EntityState* entity) {
+  byte y;
+  word x;
+  byte t;
   if (flags[BOBBERT]&PLAYER_SAVED) {
     entity->x = 27*TILE_SIZE;
     entity->y = 1*TILE_SIZE;
     entity->entity = 2;
   }
-  else {
+  else if (current_entities[2].entity != 7) {
     // Anim
     entity->chr_offset = (anim&4) ? 4 : 0;
-    entity->x--;
-    if (entity->x < 4*TILE_SIZE)
-      entity->entity = 3;
+    
+    t = 0;
+    for (t = 2; t < 5 && current_entities[t].entity == 0; t++); 
+    if (current_entities[t].entity != 0) {
+      y = current_entities[t].y;
+      x = current_entities[t].x;
+      if (collision(entity->x,entity->y,x,y)) {
+        current_entities[t].entity = 0;
+      }
     }
+    else {
+      entity->entity = 3;
+      flags[BOBBERT] |= PLAYER_SAVED;
+      dialogue("Bobbert", "Lets get you fixed up");
+     return;
+   }
+    
+    if (entity->x > x)
+      entity->x-=2;
+    else if (entity->x < x)
+      entity->x+=2;
+    if (entity->y > y)
+      entity->y-=2;
+    else if (entity->y < y)
+      entity->y+=2;
+    
+   
+  }
 }
 
 void bobbert_soup(EntityState*) {
@@ -171,11 +216,23 @@ void bobbert_soup(EntityState*) {
 void soup_pot(EntityState*) {
   if (flags[BOBBERT]&HORSE_STOLEN)
     dialogue("Bobbert", "No soup for you!");
-  else if (playerhealth >= MAX_PLAYER_HEALTH)
-    dialogue("Max health", "You are already full");
-  else while(playerhealth < MAX_PLAYER_HEALTH) {
-    wait_frame();
-    damage(-1);
+  else {
+    while(playerhealth < MAX_PLAYER_HEALTH) {
+      playerhealth++;
+      damage_cooldown = 0;
+      damage(0);
+      wait_frame();
+      wait_frame();
+      wait_frame();
+      wait_frame();
+    }
+    if (!(flags[BOBBERT]&HORSE_LENT)) {
+      dialogue("Bobbert", "Could you do a favor for me?");
+      dialogue("Bobbert", "Deliver this to the king");
+      dialogue("Bobbert", "It's a top secret message");
+      dialogue("Bobbert", "You can ride my horse");
+      flags[BOBBERT] |= HORSE_LENT;
+    }
   }
   player_pushback();
 }
@@ -186,6 +243,38 @@ void bobbert_house(EntityState*) {
   else
     dialogue("Bobbert", "Go inside and try my soup!");
   player_pushback();
+}
+
+void spider_wait(EntityState* entity) {
+  if (playerx+4*TILE_SIZE > entity->x && playerx < entity->x+4*TILE_SIZE)
+    entity->entity = 8;
+}
+
+#define SPIDER_SPEED 4
+
+void spider_attack(EntityState* entity) {
+  if (playerx > entity->x)
+    entity->x+=SPIDER_SPEED;
+  else if (playerx < entity->x)
+    entity->x-=SPIDER_SPEED;
+  if (playery > entity->y)
+    entity->y+=SPIDER_SPEED;
+  else if (playery < entity->y)
+    entity->y-=SPIDER_SPEED;
+}
+
+void spider_hit(EntityState* entity) {
+  entity->entity = 9;
+  damage(SPIDER_DAMAGE);
+}
+
+void spider_retreat(EntityState* entity) {
+  entity->y += rand8()&7;
+  entity->y -= rand8()&7;
+  if (entity->x < playerx+TILE_SIZE*4)
+    entity->x += rand8()&7;
+  else
+    entity->entity = 8;
 }
 
 // Entities
@@ -200,14 +289,13 @@ const Entity entities[] = {
   {0xf8, 0 | OAM_FLIP_H, NULL, bobbert_save}, // 4: Bobbert saves the player
   {0xfc, 0 | OAM_FLIP_H, bobbert_soup, NULL}, // 5: Bobbert offers soup
   // 6: Soup
-  {0xa8, 0, soup_pot, NULL}
+  {0xa8, 0, soup_pot, NULL},
+  // 7-9: Spider
+  {0xb0, 2, NULL, spider_wait},	// Spider wait
+  {0xb0, 2, spider_hit, spider_attack},	// Spider attack
+  {0xb0, 2, NULL, spider_retreat},	// Spider retreat
 };
 
-#define CENTER 119
-
-#define HORSE_INDEX MAX_ENTITIES
-EntityState current_entities[MAX_ENTITIES+1];
-byte horse_area = 0;
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -220,7 +308,7 @@ const char PALETTE[32] = {
 
   0x06,0x37,0x24,0x00,	// sprite colors
   0x16,0x36,0x34,0x00,
-  0x29,0x2B,0x1A,0x00,
+  0x00,0x15,0x05,0x00,
   0x0F,0x27,0x2A
 };
 
@@ -264,7 +352,7 @@ void dialogue(char* name, char* text) {
     	val = pad_poll(0);
     }
     wait_frame();
-  } while (!val);
+  } while (!(val&PAD_A));
   vrambuf_put(NTADR_B(29,3), "\x3", 1);
   while (t_scroll > 0) {
     t_scroll -= t_scroll_speed;
@@ -290,6 +378,8 @@ void load_area(byte newarea, word x, byte y) {
   area = newarea;
   playerx = x;
   playery = y;
+  oldplayerx = x;
+  oldplayery = y;
   player_scroll();
   final_scroll = x_scroll;
   x_scroll += 32*9;
@@ -312,10 +402,6 @@ void load_area(byte newarea, word x, byte y) {
     else
       current_entities[i] = areas[area].entities[i];
   }
-}
-
-bool player_collision(word x, byte y) {
-  return (playerx+8 < x+16 && playerx+8 >= x && playery+8 < y+16 && playery+8 >= y);
 }
 
 void controls() {

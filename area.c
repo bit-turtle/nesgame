@@ -64,6 +64,10 @@ const Area areas[] = {
     { // Entities
       {1, 31*TILE_SIZE-8, 2*TILE_SIZE},	// Bobbert's Horse
       {4, 30*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
+      // Spiders
+      {7, 16*TILE_SIZE, 3*TILE_SIZE},
+      {7, 16*TILE_SIZE, 6*TILE_SIZE-8},
+      {7, 16*TILE_SIZE, 8*TILE_SIZE},
     },
     { // Doors
       {1,1*TILE_SIZE,6*TILE_SIZE-8},
