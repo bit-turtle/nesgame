@@ -97,6 +97,7 @@ void damage(byte dmg) {
 // Pre def
 void dialogue(char* name, char* text);
 void load_area(byte newarea, word x, byte y);
+void wait_frame();
 // Entity Callbacks
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
@@ -105,7 +106,7 @@ void pushable(EntityState* entity) {
 
 void horse_mount(EntityState* entity) {
   if (!(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)))
-    dialogue("Bobbert", "That's my horse!");
+    dialogue("Bobbert", "Hey! That's my horse!");
   if (!horse) {
     horse = true;
     entity->entity = 0;
@@ -116,7 +117,14 @@ void horse_mount(EntityState* entity) {
 void bobbert_walk(EntityState* entity) {
   // Anim
   entity->chr_offset = (anim&4) ? 4 : 0;
-  if (entity->x < 27*TILE_SIZE) {
+  if (entity->x > playerx+6*TILE_SIZE) {
+    if (!(flags[BOBBERT]&PLAYER_SLOW)) {
+      dialogue("Bobbert", "You coming or not?");
+    	flags[BOBBERT] |= PLAYER_SLOW;
+    }
+    entity->chr_offset = 4;
+  }
+  else if (entity->x < 27*TILE_SIZE) {
     entity->x++;
     if (entity->y > 6*TILE_SIZE-8)
       entity->y--;
@@ -128,12 +136,56 @@ void bobbert_walk(EntityState* entity) {
   else {
     entity->entity = 2;	// Standstill
     entity->chr_offset = 0;
-    dialogue("Bobbert", "This is my house");
+    dialogue("Bobbert", "My soup will heal you");
   }
 }
 
+void player_pushback() {
+  playerx = oldplayerx;
+  playery = oldplayery;
+}
+
 void bobbert_save(EntityState* entity) {
-  entity->x--;
+  if (flags[BOBBERT]&PLAYER_SAVED) {
+    entity->x = 27*TILE_SIZE;
+    entity->y = 1*TILE_SIZE;
+    entity->entity = 2;
+  }
+  else {
+    // Anim
+    entity->chr_offset = (anim&4) ? 4 : 0;
+    entity->x--;
+    if (entity->x < 4*TILE_SIZE)
+      entity->entity = 3;
+    }
+}
+
+void bobbert_soup(EntityState*) {
+  if (flags[BOBBERT]&HORSE_STOLEN)
+    dialogue("Bobbert", "No soup for you!");
+  else
+    dialogue("Bobbert", "Go on, try the soup!");
+  player_pushback();
+}
+
+void soup_pot(EntityState*) {
+  if (flags[BOBBERT]&HORSE_STOLEN)
+    dialogue("Bobbert", "No soup for you!");
+  else if (playerhealth >= MAX_PLAYER_HEALTH)
+    dialogue("Max health", "You are already full");
+  else while(playerhealth < MAX_PLAYER_HEALTH) {
+    wait_frame();
+    damage(-1);
+  }
+  player_pushback();
+}
+
+void bobbert_house(EntityState*) {
+  if (flags[BOBBERT]&HORSE_STOLEN)
+    dialogue("Bobbert", "You stole my horse, thief.");
+  else
+    dialogue("Bobbert", "Go inside and try my soup!");
+  player_pushback();
 }
 
 // Entities
@@ -142,10 +194,13 @@ const Entity entities[] = {
   {0x1a,0,NULL,NULL},
   // Entities
   {0xe8, 0, horse_mount, NULL},	// 1: Horse
-  // 2-4: Bobbert
-  {0xfc, 0, NULL, NULL}, // 2: Bobbert standstill
+  // 2-5: Bobbert
+  {0xfc, 0, bobbert_house, NULL}, // 2: Bobbert standstill
   {0xf8, 0, NULL, bobbert_walk}, // 3: Bobbert walk to house
-  {0xf8, 0 | OAM_FLIP_H, NULL, bobbert_save}
+  {0xf8, 0 | OAM_FLIP_H, NULL, bobbert_save}, // 4: Bobbert saves the player
+  {0xfc, 0 | OAM_FLIP_H, bobbert_soup, NULL}, // 5: Bobbert offers soup
+  // 6: Soup
+  {0xa8, 0, soup_pot, NULL}
 };
 
 #define CENTER 119
@@ -222,8 +277,8 @@ void player_scroll() {
     // Limits
     if (newx_scroll > 0xfff)
       x_scroll = 0;
-    else if (newx_scroll > 16*areas[area].width-0xff)
-      x_scroll = 16*areas[area].width-0xff;
+    else if (newx_scroll+0xff > TILE_SIZE*areas[area].width)
+      x_scroll = areas[area].width*TILE_SIZE > 0xff ? (TILE_SIZE*areas[area].width-0xff) : 0;
     else
       x_scroll = newx_scroll;
 }
@@ -231,6 +286,7 @@ void player_scroll() {
 void load_area(byte newarea, word x, byte y) {
   byte i;
   word final_scroll;
+  wait_frame();
   area = newarea;
   playerx = x;
   playery = y;
@@ -289,15 +345,22 @@ void controls() {
     if (state&PAD_RIGHT) {
       playerx+=playerspeed;
       dir = RIGHT;
-      if (playerx>>4>=areas[area].width-1)
+      if (playerx>>4>=areas[area].width-1) {
         playerx = areas[area].width-1<<4;
+        if (areas[area].doors[RIGHT_AREA].area != NULL_AREA)
+          load_area(areas[area].doors[RIGHT_AREA].area, areas[area].doors[RIGHT_AREA].x, areas[area].doors[RIGHT_AREA].y);
+      
+      }
       moving = true;
     }
     if (state&PAD_LEFT) {
       playerx-=playerspeed;
       dir = LEFT;
-      if (playerx > 256<<4)
+      if (playerx > 256<<4) {
         playerx = 0;
+        if (areas[area].doors[LEFT_AREA].area != NULL_AREA)
+          load_area(areas[area].doors[LEFT_AREA].area, areas[area].doors[LEFT_AREA].x, areas[area].doors[LEFT_AREA].y);
+      }
       moving = true;
     }
     if (state&PAD_UP) {
@@ -313,7 +376,7 @@ void controls() {
       moving = true;
     }
     
-    // Bobbert horse theif
+    // Bobbert horse thief
     if (horse && !(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)) && (playerx > (28+HORSE_STEAL_DISTANCE)*TILE_SIZE || playerx < (28-HORSE_STEAL_DISTANCE)*TILE_SIZE)) {
       dialogue("Bobbert", "Get back here you thief!");
       flags[BOBBERT] |= HORSE_STOLEN;
@@ -386,7 +449,7 @@ void main(void) {
     // Render entities
     for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {
       // Render
-      metasprite(entities[current_entities[i].entity].chr+current_entities[i].chr_offset, entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
+      metasprite((entities[current_entities[i].entity].chr+current_entities[i].chr_offset), entities[current_entities[i].entity].attr, current_entities[i].x, current_entities[i].y);
     }
     
     // Hide unused sprites

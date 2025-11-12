@@ -10,6 +10,8 @@ extern byte flags[16];
 #define BOBBERT 0
 #define HORSE_LENT	0b10000000
 #define HORSE_STOLEN	0b01000000
+#define PLAYER_SLOW	0b00100000
 #define PLAYER_SAVED	0b00000001
+#define PLAYER_FED	0b00000010
 
 #endif

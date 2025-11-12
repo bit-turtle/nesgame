@@ -31,7 +31,10 @@ const Tile tiles[] = {
   {0x98, 2 | GROUND},	// 2: Path Bottom
   {0x9c, 2 | GROUND},	// 3: Path
   {0xa0, 1 | SOLID},	// 4: Brick
-  {0xa4, 1 | DOOR1 | LOCKED},	// 5: Door
+  {0xa4, 1 | DOOR1},	// 5: Door
+  {0xa4, 1 | DOOR1 | LOCKED},	// 6: Locked Door
+  {0x1a, 0 | SOLID},	// 7: Void
+  {0xac, 2 | GROUND},	// 8: Wood floor
 };
 
 const Collumn collumns[] = {
@@ -47,20 +50,36 @@ const Collumn collumns[] = {
   // 8-9: Brick House
   {{4,0,0,0,1,3,3,2,0,0,0,0}},
   {{5,3,3,3,3,3,3,2,0,0,0,0}},
+  // 10: Void
+  {{7,7,7,7,7,7,7,7,7,7,7,7}},
+  // 11: Brick wall,
+  {{4,4,4,4,4,4,4,4,4,4,4,4}},
+  // 12: Brick room
+  {{4,8,8,8,8,8,8,8,8,8,8,4}}
 };
 
 const Area areas[] = {
-  { // Starting Area
-    64, {0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2},
+  { // 0: Starting Area
+    64, {0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 9, 8, 8, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
     { // Entities
       {1, 31*TILE_SIZE-8, 2*TILE_SIZE},	// Bobbert's Horse
-      {3, 1*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
+      {4, 30*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
     },
     { // Doors
-      {0,0,0},
-      {NULL_AREA},{NULL_AREA},	// Unused
-      {}, // Right
-      {NULL_AREA},{NULL_AREA},{NULL_AREA} // Unused
+      {1,1*TILE_SIZE,6*TILE_SIZE-8},
+      {},{},{},{},{},{},
+      {NULL_AREA},{NULL_AREA}
+    }
+  },
+  { // 1: Bobbert's House
+    12, {12,12,12,12,12,12,12,12,12,12,12,11,10,10,10,10,10,10,10,10,10,10},
+    {	// Entities
+      {5, 5*TILE_SIZE, 5*TILE_SIZE-8},	// Bobbert
+      {6, 5*TILE_SIZE, 6*TILE_SIZE-8}	// Soup
+    },
+    {
+      {},{},{},{},{},{},{},
+      {NULL_AREA}, {0, 28*TILE_SIZE, 1*TILE_SIZE}
     }
   }
 };

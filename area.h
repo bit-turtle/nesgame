@@ -12,14 +12,10 @@
 #define DOOR1		0b00001000
 #define DOOR2		0b00010000
 #define DOOR3		0b00011000
-#define DOOR4		0b00100000
-#define RIGHT_DOOR	DOOR4
-#define DOOR5		0b00101000
-#define LEFT_DOOR	DOOR5
-#define DOOR6		0b00110000
-#define TOP_DOOR	DOOR6
-#define DOOR7		0b00111000
-#define BOTTOM_DOOR	DOOR7
+#define LARGE_DOOR1	0b00100000
+#define LARGE_DOOR2	0b00101000
+#define LARGE_DOOR3	0b00110000
+#define LARGE_DOOR4	0b00111000
 #define LARGE_DOOR	0b00100000	// Doors 1-3: Small, Doors 4-7 Large
 #define DoorIndex(attr) ( ((attr&DOOR) >> 3) - 1)
 #define LOCKED	0b00000100
@@ -69,11 +65,14 @@ typedef struct Door {
   byte y;
 } Door;
 
+#define RIGHT_AREA 7
+#define LEFT_AREA 8
+
 typedef struct Area {
   byte width;
   byte collumns[64];	// list of collumns from list above
   EntityState entities[MAX_ENTITIES];
-  Door doors[7];
+  Door doors[9];
 } Area;
 
 const extern Area areas[32];
