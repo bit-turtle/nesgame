@@ -128,6 +128,7 @@ void horse_mount(EntityState* entity) {
     horse = true;
     entity->entity = 0;
     playery = entity->y;
+    playerx = entity->x;
   }
 }
 
@@ -175,7 +176,7 @@ void bobbert_save(EntityState* entity) {
   else if (current_entities[2].entity != 7) {
     // Anim
     entity->chr_offset = (anim&4) ? 4 : 0;
-    sprite(entity->x-4, entity->y+4, 0x84, 2 | OAM_FLIP_H);
+    sprite(entity->x-4, entity->y+(anim&8 ? 8 : 4), 0x84, 2 | OAM_FLIP_H | (anim&8 ? OAM_FLIP_V : 0));
     
     t = 0;
     for (t = 2; t < 5 && current_entities[t].entity == 0; t++); 
@@ -309,6 +310,7 @@ const Entity entities[] = {
   {0xb0, 0, NULL, spider_retreat},	// Spider retreat
   // 10: Sign
   {0xb4, 1, sign_read, NULL},
+  
 };
 
 
