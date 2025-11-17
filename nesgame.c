@@ -43,7 +43,7 @@ extern byte music_data[];
 
 
 // Global Variables
-byte keys = 4;
+byte keys = 0;
 void update_keys(byte num) {
   char disp[2] = "\x19 ";
   keys = num;
@@ -65,6 +65,7 @@ byte dir = RIGHT;
 #define HORSE_STEAL_DISTANCE 12
 #define SPIDER_DAMAGE 3
 byte playerspeed = 6;
+bool shield = false;
 word playerx = 50;
 byte playery = 0;
 bool collision(word x1, byte y1, word x2, byte y2) {
@@ -123,10 +124,6 @@ void pushable(EntityState* entity) {
 }
 
 void horse_mount(EntityState* entity) {
-  if (!(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN))) {
-    dialogue("Bobbert", "Hey! That's my horse!");
-    dialogue("Bobbert", "You aren't a thief, right?");
-  }
   if (!horse) {
     horse = true;
     entity->entity = 0;
@@ -178,6 +175,7 @@ void bobbert_save(EntityState* entity) {
   else if (current_entities[2].entity != 7) {
     // Anim
     entity->chr_offset = (anim&4) ? 4 : 0;
+    sprite(entity->x-4, entity->y+4, 0x84, 2 | OAM_FLIP_H);
     
     t = 0;
     for (t = 2; t < 5 && current_entities[t].entity == 0; t++); 
@@ -231,9 +229,10 @@ void soup_pot(EntityState*) {
     }
     if (!(flags[BOBBERT]&HORSE_LENT)) {
       dialogue("Bobbert", "Could you do a favor for me?");
-      dialogue("Bobbert", "Deliver this to the king");
-      dialogue("Bobbert", "It's an important message");
+      dialogue("Bobbert", "Deliver this to the capital");
       dialogue("Bobbert", "Also, you can ride my horse");
+      vrambuf_put(NTADR_A(26,2), "\x1e", 1);
+      flags[BOBBERT] |= HAS_MESSAGE;
       flags[BOBBERT] |= HORSE_LENT;
     }
   }
@@ -280,6 +279,17 @@ void spider_retreat(EntityState* entity) {
     entity->entity = 8;
 }
 
+void sign_read(EntityState*) {
+  switch (area) {
+    case 2:
+      dialogue("Sign", "<-- Forest  ----  Tuleno -->");
+      break;
+    default:
+      dialogue("Faded Sign", "The text is unreadable");
+  };
+  player_pushback();
+}
+
 // Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
@@ -294,9 +304,11 @@ const Entity entities[] = {
   // 6: Soup
   {0xa8, 0, soup_pot, NULL},
   // 7-9: Spider
-  {0xb0, 2, NULL, spider_wait},	// Spider wait
-  {0xb0, 2, spider_hit, spider_attack},	// Spider attack
-  {0xb0, 2, NULL, spider_retreat},	// Spider retreat
+  {0xb0, 0, NULL, spider_wait},	// Spider wait
+  {0xb0, 0, spider_hit, spider_attack},	// Spider attack
+  {0xb0, 0, NULL, spider_retreat},	// Spider retreat
+  // 10: Sign
+  {0xb4, 1, sign_read, NULL},
 };
 
 
@@ -311,13 +323,11 @@ const char PALETTE[32] = {
 
   0x06,0x37,0x24,0x00,	// sprite colors
   0x16,0x36,0x34,0x00,
-  0x00,0x15,0x05,0x00,
+  0x2D,0x20,0x03,0x00,
   0x0F,0x27,0x2A
 };
 
 void wait_frame() {
-  // reset oam_id
-  oam_id = 4;
   vrambuf_end();
   // ensure VRAM buffer is cleared
   ppu_wait_nmi();
@@ -468,7 +478,7 @@ void controls() {
     // Bobbert horse thief
     if (horse && !(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN)) && (playerx > (28+HORSE_STEAL_DISTANCE)*TILE_SIZE || playerx < (28-HORSE_STEAL_DISTANCE)*TILE_SIZE)) {
       dialogue("Bobbert", "Get back here you thief!");
-      dialogue("Hard Mode Activated", "You are now a horse thief");
+      vrambuf_put(NTADR_A(26,2), "\x1f", 1);
       flags[BOBBERT] |= HORSE_STOLEN;
     }
   }
@@ -527,6 +537,8 @@ void main(void) {
     
     wait_frame();
     player_scroll();
+  // reset oam_id
+  oam_id = 4;
     
     // Update Game
     
@@ -544,6 +556,12 @@ void main(void) {
     
     // Hide unused sprites
     oam_hide_rest(oam_id);
+    
+    if (horse && !(flags[BOBBERT]&(HORSE_LENT|HORSE_STOLEN|HORSE_WARN))) {
+    	dialogue("Bobbert", "Hey! That's my horse!");
+    	dialogue("Bobbert", "You aren't a thief, right?");
+      	flags[BOBBERT] |= HORSE_WARN;
+    }
     
     // Process entities
     for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {

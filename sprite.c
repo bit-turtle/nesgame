@@ -6,7 +6,7 @@
 byte oam_id = 4;
 
 void sprite(word x, byte y, byte ch, byte attr) {
-  oam_id = oam_spr(x-x_scroll, 30+y, (x < x_scroll || x > x_scroll + 32*8) ? 0x00 : (ch), attr, oam_id);
+  oam_id = oam_spr(x-x_scroll, 30+y, (x < x_scroll || x >= x_scroll + 32*8) ? 0x00 : (ch), attr, oam_id);
 }
 
 void metasprite(byte ch, byte attr, word x, byte y) {
