@@ -26,7 +26,7 @@ void render_collumn(byte dir){
 }
 
 const Tile tiles[] = {
-  {0x90, 0 | GROUND},	// 0: Grass
+  {0x90, 0 | GROUND | OFFROAD},	// 0: Grass
   {0x94, 2 | GROUND},	// 1: Path Top
   {0x98, 2 | GROUND},	// 2: Path Bottom
   {0x9c, 2 | GROUND},	// 3: Path
@@ -36,6 +36,7 @@ const Tile tiles[] = {
   {0x1a, 0 | SOLID},	// 7: Void
   {0xac, 2 | GROUND},	// 8: Wood floor
   {0x9c, 2 | LARGE_DOOR1},	// 9: Path Door1
+  {0x9c, 2 | LARGE_DOOR2},	// 10: Path Door2
 };
 
 const Collumn collumns[] = {
@@ -59,6 +60,8 @@ const Collumn collumns[] = {
   {{4,8,8,8,8,8,8,8,8,8,8,4}},
   // 13: Top path
   {{9,3,3,3,3,3,3,2,0,0,0,0}},
+  // 14: Bottom path
+  {{0,0,0,0,1,3,3,3,3,3,3,10}},
 };
 
 const Area areas[] = {
@@ -90,14 +93,25 @@ const Area areas[] = {
     }
   },
   {	// 2: Road
-    64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
+    64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,14,14,14,2,2,2,2,2},
     {// Entities
       {10, 32*TILE_SIZE-8, TILE_SIZE*8}
     },
     {// Doors
       {},{},{},
       {0, 40*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
-      {NULL_AREA},{NULL_AREA}
+      {3, 16*TILE_SIZE-8,1*TILE_SIZE},{NULL_AREA}
     }
+  },
+  {	// 3: Turlin
+    32, {0,1,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+    {// Entities
+    },
+    {// Doors
+      {},{},{},
+      {2, 62*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
+      {NULL_AREA}, {NULL_AREA}
+    },
+    4
   }
 };

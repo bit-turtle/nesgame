@@ -16,4 +16,11 @@ extern byte flags[16];
 #define PLAYER_FED	0b00000010
 #define HAS_MESSAGE	0b00000100
 
+// Weapon Flags
+#define WEAPON 1
+#define BASIC_SWORD 0b00000001
+#define SHORT_SWORD 0b00000010
+#define LARGE_SWORD 0b00000100
+#define LIGHT_SWORD 0b00001000
+
 #endif

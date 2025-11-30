@@ -20,7 +20,7 @@ Press controller buttons to hear sound effects.
 // FamiTone2
 //#link "famitone2.s"
 //#link "music.s"
-extern byte music_data[];
+extern byte music_data_test_song[];
 
 // String
 #include <string.h>
@@ -50,21 +50,23 @@ void update_keys(byte num) {
   disp[1] = 0x30 + keys;
   vrambuf_put(NTADR_A(28,2), disp, 2);
 }
+byte weapon = 1;
 byte anim;
 word t_scroll = 0;
+bool offroad = false;
 #define t_scroll_speed 16
 word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
 #define PLAYER_WALK 1
-#define PLAYER_RUN 3
+#define PLAYER_RUN 2
 #define PLAYER_WALK_ANIM_SPEED 1
 #define PLAYER_RUN_ANIM_SPEED 2
-#define PLAYER_RUN_MIN_HEALTH 4
+#define PLAYER_RUN_MIN_HEALTH 6
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
 #define SPIDER_DAMAGE 3
-byte playerspeed = 6;
+byte playerspeed = 0;
 bool shield = false;
 word playerx = 50;
 byte playery = 0;
@@ -72,13 +74,14 @@ bool collision(word x1, byte y1, word x2, byte y2) {
   return (x1+8 < x2+16 && x1+8 >= x2 && y1+8 < y2+16 && y1+8 >= y2);
 }
 bool player_collision(word x, byte y) {
-  return (playerx+8 < x+16 && playerx+8 >= x && playery+8 < y+16 && playery+8 >= y);
+  return (playery+8 < y+16 && playery+8 >= y && playerx+8 < x+16 && playerx+8 >= x);
 }
 bool horse = false;
 bool moving = false;
 word oldplayerx = 0;
 byte oldplayery = 0;
 #define MAX_PLAYER_HEALTH 12
+#define INITIAL_HEALTH MAX_PLAYER_HEALTH
 byte playerhealth = MAX_PLAYER_HEALTH;
 #define DAMAGE_COOLDOWN 12
 byte damage_cooldown = 0;
@@ -243,13 +246,17 @@ void soup_pot(EntityState*) {
 void bobbert_house(EntityState*) {
   if (flags[BOBBERT]&HORSE_STOLEN)
     dialogue("Bobbert", "You stole my horse, thief.");
+  else if (playerhealth == MAX_PLAYER_HEALTH)
+     dialogue("Bobbert", "Come back any time!");
   else
     dialogue("Bobbert", "Go inside and try my soup!");
   player_pushback();
 }
 
 void spider_wait(EntityState* entity) {
-  if (playerx+4*TILE_SIZE > entity->x && playerx < entity->x+4*TILE_SIZE)
+  if (flags[BOBBERT]&PLAYER_SAVED)
+    entity->entity = 0;
+  else if (playerx+4*TILE_SIZE > entity->x && playerx < entity->x+4*TILE_SIZE)
     entity->entity = 8;
 }
 
@@ -283,12 +290,17 @@ void spider_retreat(EntityState* entity) {
 void sign_read(EntityState*) {
   switch (area) {
     case 2:
-      dialogue("Sign", "<-- Forest  ----  Tuleno -->");
+      dialogue("Sign", "<-- Forest  ----  Turlin -->");
       break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
   };
   player_pushback();
+}
+
+void basic_sword_collect(EntityState* entity) {
+  weapon++;
+  entity->entity = 0;
 }
 
 // Entities
@@ -310,9 +322,18 @@ const Entity entities[] = {
   {0xb0, 0, NULL, spider_retreat},	// Spider retreat
   // 10: Sign
   {0xb4, 1, sign_read, NULL},
+  // 11: Basic Sword
+  {0x8c, 2, basic_sword_collect, NULL},
   
 };
 
+
+byte csong = 255;
+void playsong(byte song) {
+  if (song != csong)
+    music_play(song);
+  csong = song;
+}
 
 /*{pal:"nes",layout:"nes"}*/
 const char PALETTE[32] = { 
@@ -340,6 +361,7 @@ void start_frame() {
   scroll(t_scroll, 0);
   // split at sprite zero and set X scroll
   split(x_scroll, 0);
+  famitone_update();
 }
 
 void dialogue(char* name, char* text) {
@@ -358,14 +380,11 @@ void dialogue(char* name, char* text) {
     wait_frame();
   }
   counter = 0;
-  val = 0;
   do {
     counter++;
-    if (playerhealth != 0) {
-    	if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
-    	else vrambuf_put(NTADR_B(29,3), "\x3", 1);
-    	val = pad_poll(0);
-    }
+    if ((counter>>4)&1) vrambuf_put(NTADR_B(29,3), "A", 1);
+    else vrambuf_put(NTADR_B(29,3), "\x3", 1);
+    val = pad_poll(0);
     wait_frame();
   } while (!(val&PAD_A));
   vrambuf_put(NTADR_B(29,3), "\x3", 1);
@@ -417,6 +436,7 @@ void load_area(byte newarea, word x, byte y) {
     else
       current_entities[i] = areas[area].entities[i];
   }
+  playsong(areas[area].song);
 }
 
 void controls() {
@@ -441,6 +461,8 @@ void controls() {
       playerspeed = PLAYER_WALK;
   else
     playerspeed = horse ? HORSE : PLAYER_WALK;
+  if (!horse && offroad || !flags[BOBBERT]&PLAYER_SAVED)
+     playerspeed = PLAYER_WALK;
   if (moving) {
     moving = false;
     if (state&PAD_RIGHT) {
@@ -508,6 +530,8 @@ void main(void) {
   set_vram_update(updbuf);
   // display
   nmi_set_callback(start_frame);
+  // Famitone
+  famitone_init(music_data_test_song);
   //enable rendering
   ppu_on_all();
   // repeat forever
@@ -516,11 +540,12 @@ void main(void) {
   newx_scroll = x_scroll;
   renderx_scroll = x_scroll;
   // Initial health
-  playerhealth = MAX_PLAYER_HEALTH;
+  playerhealth = INITIAL_HEALTH;
   damage(0);
   damage_cooldown = 0;
   // initial horse
-  
+  horse = false;
+  weapon = 0;
   // Initial Keys
   update_keys(keys);
   while(!(playerhealth == 0 && damage_cooldown == 0)) {
@@ -583,9 +608,12 @@ void main(void) {
     if (i & FIRE)
       damage(1);
     if (i & SOLID) {
-      playerx = oldplayerx;
-      playery = oldplayery;
+      player_pushback();
     }
+    if (i & LOCKED)
+      offroad = true;
+    else
+      offroad = false;
     if (i & DOOR ) {
       wait_frame();
       if (i&LOCKED && keys == 0) {

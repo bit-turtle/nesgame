@@ -18,7 +18,8 @@
 #define LARGE_DOOR4	0b00111000
 #define LARGE_DOOR	0b00100000	// Doors 1-3: Small, Doors 4-7 Large
 #define DoorIndex(attr) ( ((attr&DOOR) >> 3) - 1)
-#define LOCKED	0b00000100
+#define LOCKED	0b00000100	// Offroad if not used on a door
+#define OFFROAD LOCKED
 // Attribute Mask
 #define MASK	0b00000011
 
@@ -44,6 +45,7 @@ typedef struct EntityState {
   word x;
   byte y;
   byte chr_offset;
+  byte health;
 } EntityState;
 
 typedef struct Entity {
@@ -51,6 +53,7 @@ typedef struct Entity {
   byte attr;
   void (*collide)(EntityState*);
   void (*tick)(EntityState*);
+  void (*die)(EntityState*);
 } Entity;
 
 const extern Entity entities[64];
@@ -73,6 +76,7 @@ typedef struct Area {
   byte collumns[64];	// list of collumns from list above
   EntityState entities[MAX_ENTITIES];
   Door doors[9];
+  byte song;
 } Area;
 
 const extern Area areas[32];
