@@ -37,6 +37,7 @@ const Tile tiles[] = {
   {0xac, 2 | GROUND},	// 8: Wood floor
   {0x9c, 2 | LARGE_DOOR1},	// 9: Path Door1
   {0x9c, 2 | LARGE_DOOR2},	// 10: Path Door2
+  {0xa4, 1 | DOOR2 | LOCKED},	// 12: Locked Door
 };
 
 const Collumn collumns[] = {
@@ -62,6 +63,8 @@ const Collumn collumns[] = {
   {{9,3,3,3,3,3,3,2,0,0,0,0}},
   // 14: Bottom path
   {{0,0,0,0,1,3,3,3,3,3,3,10}},
+  // 15: Second door
+  {{11,0,0,0,1,3,3,2,0,0,0,0}},
 };
 
 const Area areas[] = {
@@ -71,9 +74,9 @@ const Area areas[] = {
       {1, 31*TILE_SIZE-8, 2*TILE_SIZE},	// Bobbert's Horse
       {4, 30*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
       // Spiders
-      {7, 16*TILE_SIZE, 3*TILE_SIZE},
-      {7, 16*TILE_SIZE, 6*TILE_SIZE-8},
-      {7, 16*TILE_SIZE, 8*TILE_SIZE},
+      {7, 16*TILE_SIZE, 3*TILE_SIZE, 3},
+      {7, 16*TILE_SIZE, 6*TILE_SIZE-8, 3},
+      {7, 16*TILE_SIZE, 8*TILE_SIZE, 3},
     },
     { // Doors
       {1,1*TILE_SIZE,6*TILE_SIZE-8},
@@ -95,7 +98,8 @@ const Area areas[] = {
   {	// 2: Road
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,14,14,14,2,2,2,2,2},
     {// Entities
-      {10, 32*TILE_SIZE-8, TILE_SIZE*8}
+      {10, 32*TILE_SIZE-8, TILE_SIZE*8},
+      {11, 14*TILE_SIZE, TILE_SIZE*9}
     },
     {// Doors
       {},{},{},
@@ -104,14 +108,27 @@ const Area areas[] = {
     }
   },
   {	// 3: Turlin
-    32, {0,1,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+    32, {0,1,2,2,8,8,8,8,9,8,8,8,8,2,13,13,13,13,2,8,8,8,8,15,8,8,8,8,2,2,1,0},
     {// Entities
+      {10, 18*TILE_SIZE, 1*TILE_SIZE},
+      {12, 16*TILE_SIZE-8, 6*TILE_SIZE-8}
     },
     {// Doors
-      {},{},{},
+      {4, 1*TILE_SIZE, 6*TILE_SIZE-8},{},{},
       {2, 62*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
     4
+  },
+  {	// 4: Mayor Turt Le's House
+    12, {12,12,12,12,12,12,12,12,12,12,12,11,10,10,10,10,10,10,10,10,10,10,10,10,10},
+    {	// Entities
+      {13, TILE_SIZE*5, 6*TILE_SIZE-8}
+    },
+    {	// Door
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{3, TILE_SIZE*8, TILE_SIZE*1}
+    }
   }
 };

@@ -44,8 +44,9 @@ typedef struct EntityState {
   byte entity;
   word x;
   byte y;
-  byte chr_offset;
   byte health;
+  byte chr_offset;
+  byte memory;
 } EntityState;
 
 typedef struct Entity {
@@ -54,6 +55,8 @@ typedef struct Entity {
   void (*collide)(EntityState*);
   void (*tick)(EntityState*);
   void (*die)(EntityState*);
+  void (*init)(EntityState*);
+  void (*hurt)(EntityState*);
 } Entity;
 
 const extern Entity entities[64];
