@@ -32,12 +32,21 @@ const Tile tiles[] = {
   {0x9c, 2 | GROUND},	// 3: Path
   {0xa0, 1 | SOLID},	// 4: Brick
   {0xa4, 1 | DOOR1},	// 5: Door
-  {0xa4, 1 | DOOR1 | LOCKED},	// 6: Locked Door
+  {0xa4, 1 | DOOR2 | LOCKED},	// 6: Locked Door
   {0x1a, 0 | SOLID},	// 7: Void
   {0xac, 2 | GROUND},	// 8: Wood floor
   {0x9c, 2 | LARGE_DOOR1},	// 9: Path Door1
   {0x9c, 2 | LARGE_DOOR2},	// 10: Path Door2
-  {0xa4, 1 | DOOR2 | LOCKED},	// 12: Locked Door
+  {0xa4, 1 | DOOR2 | LOCKED},	// 11: Locked Door
+  {0xcc, 0 | SOLID},	// 12:  Tree Top
+  {0xd0, 0 | SOLID},	// 13: Tree Bottom
+  {0xd4, 0 | SOLID},	// 14: Tree center
+  {0x90, 0 | LARGE_DOOR1},	// 15: Grass door 1
+  {0x90, 0 | LARGE_DOOR2},	// 16: Grass door 2
+  {0x90, 0 | LARGE_DOOR3},	// 17: Grass door 3
+  {0x90, 0 | LARGE_DOOR4},	// 18: Grass door 4
+  {0xcc, 0 | DOOR3},	// 19: Hidden door
+  {0x90, 2 | GROUND | OFFROAD},	// 20: Dirty grass
 };
 
 const Collumn collumns[] = {
@@ -63,8 +72,32 @@ const Collumn collumns[] = {
   {{9,3,3,3,3,3,3,2,0,0,0,0}},
   // 14: Bottom path
   {{0,0,0,0,1,3,3,3,3,3,3,10}},
-  // 15: Second door
+  // 15: Second door with no path
   {{11,0,0,0,1,3,3,2,0,0,0,0}},
+  // 16: Tree no path
+  {{14,14,12,0,0,0,0,0,0,13,14,14}},
+  // 17: Tree small path
+  {{14,14,12,0,0,1,2,0,0,13,14,14}},
+  // 18: Tree Normal path
+  {{14,14,12,0,1,3,3,2,0,13,14,14}},
+  // 19: Tree smaller no path
+  {{14,14,14,12,0,0,0,0,13,14,14,14}},
+  // 20: Tree top path (Large door 1)
+  {{15,0,0,0,0,0,0,0,13,14,14,14}},
+  // 21: Tree bottom path (Large door 2)
+  {{14,14,14,12,0,0,0,0,0,0,0,16}},
+  // 22: Tree top path 2 (Large door 3)
+  {{17,0,0,0,0,0,0,0,13,14,14,14}},
+  // 23: Tree bottom path 2 (Large door 4)
+  {{14,14,14,12,0,0,0,0,0,0,0,18}},
+  // 24: Tree intersection path (Large door 1 & 2)
+  {{15,0,0,0,0,0,0,0,0,0,0,16}},
+  // 25: Tree almost no path
+  {{14,14,14,14,12,0,0,13,14,14,14,14}},
+  // 26: Tree no path
+  {{14,14,14,14,14,14,14,14,14,14,14,14}},
+  // 27: Hidden tree path
+  {{14,14,14,19,20,0,0,0,13,14,14,14}},
 };
 
 const Area areas[] = {
@@ -82,7 +115,9 @@ const Area areas[] = {
       {1,1*TILE_SIZE,6*TILE_SIZE-8},
       {},{},{},{},{},{},
       {2,32*TILE_SIZE-8,1*TILE_SIZE},{NULL_AREA}
-    }
+    },
+    0,
+    NORTH
   },
   { // 1: Bobbert's House
     12, {12,12,12,12,12,12,12,12,12,12,12,11,10,10,10,10,10,10,10,10,10,10},
@@ -93,19 +128,22 @@ const Area areas[] = {
     {
       {},{},{},{},{},{},{},
       {NULL_AREA}, {0, 28*TILE_SIZE, 1*TILE_SIZE}
-    }
+    },
+    0,
+    EAST
   },
   {	// 2: Road
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,14,14,14,2,2,2,2,2},
     {// Entities
-      {10, 32*TILE_SIZE-8, TILE_SIZE*8},
-      {11, 14*TILE_SIZE, TILE_SIZE*9}
+      {10, 32*TILE_SIZE-8, TILE_SIZE*8}
     },
     {// Doors
       {},{},{},
       {0, 40*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
-      {3, 16*TILE_SIZE-8,1*TILE_SIZE},{NULL_AREA}
-    }
+      {3, 16*TILE_SIZE-8,1*TILE_SIZE},{5, 23*TILE_SIZE, 6*TILE_SIZE-8}
+    },
+    0,
+    EAST
   },
   {	// 3: Turlin
     32, {0,1,2,2,8,8,8,8,9,8,8,8,8,2,13,13,13,13,2,8,8,8,8,15,8,8,8,8,2,2,1,0},
@@ -118,7 +156,8 @@ const Area areas[] = {
       {2, 62*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
-    4
+    4,
+    NORTH
   },
   {	// 4: Mayor Turt Le's House
     12, {12,12,12,12,12,12,12,12,12,12,12,11,10,10,10,10,10,10,10,10,10,10,10,10,10},
@@ -129,6 +168,62 @@ const Area areas[] = {
       {},{},{},
       {},{},{},{},
       {NULL_AREA},{3, TILE_SIZE*8, TILE_SIZE*1}
-    }
+    },
+    4,
+    WEST
+  },
+  {	// 5: Entrance to forest
+    25, {19,19,19,19,16,16,16,16,16,16,16,16,16,17,18,18,18,18,18,2,2,2,2,2,2},
+    {	// Entities
+      {10, 12*TILE_SIZE-8, 6*TILE_SIZE-8}
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {2, TILE_SIZE*1, TILE_SIZE*6-8},{6, 32*TILE_SIZE-8, 1*TILE_SIZE}
+    },
+    1,
+    EAST
+  },
+  {	// 6: Maze part 1
+    64, {26,25,19,19,19,19,21,21,21,21,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,23,23,23,23,19,19,19,19,19,19,19,25,26},
+    {	// Entities
+    },
+    {// Doors
+      {},{},{},
+      {5, TILE_SIZE*1, TILE_SIZE*6-8},{},{},{7, TILE_SIZE*1, TILE_SIZE*6-8},
+      {NULL_AREA},{NULL_AREA}
+    },
+    1,
+    NORTH
+  },
+  
+  { // 7: Maze part 2
+    64, {19,19,19,19,19,19,19,19,19,19,19,19,27,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,24,24,24,24,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,23,23,23,23,19,19,19,19,19,19,19,19,19},
+    {	// Entities
+    },
+    {// Doors
+      {},{},{8, TILE_SIZE*1, TILE_SIZE*6-8},
+      {},{},{},{},
+      {NULL_AREA},{6, TILE_SIZE*53-8, TILE_SIZE*10}
+    },
+    1,
+    EAST
+  },
+  {	// 8: Compass room
+    15, {25,25,25,25,25,25,25,25,19,19,19,19,19,25,26,26},
+    {	// Entities
+    },
+    {//Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{7, TILE_SIZE*12, TILE_SIZE*4}
+    },
+    1,
+    NORTH
+  },
+  {	// 9:
+    
   }
+  
 };

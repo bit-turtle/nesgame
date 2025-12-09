@@ -41,13 +41,18 @@ extern byte music_data_test_song[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 0
+#define INITIAL_AREA 7
 #define INITIAL_WEAPON 0
+#define INITIAL_COMPASS false
+#define INITIAL_HORSE true
 const byte weapon_damage[] = {3, 2, 4, 1};
 #define DEFAULT_MAX_HEALTH 12
 #define FOUNTAIN_HEALTH 4
 // Global Variables
-byte coins = 8;
+#define INITIAL_COINS 8
+#define INITIAL_KEYS 2
+byte coins;
+bool compass = false;
 void update_coins(byte new) {
   char disp[2] = "\x10 ";
   coins = new;
@@ -389,6 +394,9 @@ void sign_read(EntityState*) {
       break;
     case 3:
       dialogue("Welcome to Turlin!", "Population: 2");
+      break;
+    case 5:
+      dialogue("End of the road", "Just forest from here on.");
       break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
@@ -791,9 +799,12 @@ reset:
   damage_cooldown = 0;
   dir = RIGHT;
   // initial horse
-  horse = false;
+  horse = INITIAL_HORSE;
+  compass = INITIAL_COMPASS;
   weapon = INITIAL_WEAPON;
   // Initial Keys
+  keys = INITIAL_KEYS;
+  coins = INITIAL_COINS;
   update_keys(keys);
   update_coins(coins);
   while(!(playerhealth == 0 && damage_cooldown == 0)) {
@@ -814,6 +825,15 @@ reset:
     // Controls
     controls();
     anim++;
+    
+    // Draw Compass
+    if (compass) {
+    i = areas[area].dir;
+    if (areas[area].dir == UNKNOWN)
+      i = (anim>>2)&0b11;
+    i += 0x8;
+    vrambuf_put(NTADR_A(25,2), &i, 1);
+      }
     
     wait_frame();
     player_scroll();
@@ -856,7 +876,7 @@ reset:
         continue;
       // Process
       if (attacktimer >= HIT_TIME && player_collision(current_entities[i].x, current_entities[i].y)) {
-        current_entities[i].health-=weapon_damage[weapon];
+        current_entities[i].health-=weapon_damage[weapon-1];
         if (entities[current_entities[i].entity].hurt != NULL)
           entities[current_entities[i].entity].hurt(&current_entities[i]);
         if (current_entities[i].health > 200) {

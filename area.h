@@ -30,6 +30,8 @@ typedef struct Tile {
 
 #define TILE_SIZE 16
 
+#define HP(hp) (hp-1)
+
 const extern Tile tiles[256];
 
 typedef struct Collumn {
@@ -74,12 +76,21 @@ typedef struct Door {
 #define RIGHT_AREA 7
 #define LEFT_AREA 8
 
+enum Direction {
+	NORTH = 0,
+  	EAST = 1,
+        SOUTH = 2,
+        WEST = 3,
+  	UNKNOWN = 0xff
+};
+
 typedef struct Area {
   byte width;
   byte collumns[64];	// list of collumns from list above
   EntityState entities[MAX_ENTITIES];
   Door doors[9];
   byte song;
+  enum Direction dir;	// Direction of the top of the screen
 } Area;
 
 const extern Area areas[32];
