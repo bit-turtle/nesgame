@@ -1,7 +1,6 @@
 
 /*
-Demonstrates the Famitone2 library for sound and music.
-Press controller buttons to hear sound effects.
+	Another game for the nes
 */
 
 // Neslib
@@ -41,17 +40,18 @@ extern byte music_data_test_song[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 7
-#define INITIAL_WEAPON 0
+#define INITIAL_AREA 13
+#define INITIAL_WEAPON 1
 #define INITIAL_COMPASS false
-#define INITIAL_HORSE true
+#define INITIAL_HORSE false
 const byte weapon_damage[] = {3, 2, 4, 1};
 #define DEFAULT_MAX_HEALTH 12
 #define FOUNTAIN_HEALTH 4
 // Global Variables
-#define INITIAL_COINS 8
-#define INITIAL_KEYS 2
+#define INITIAL_COINS 0
+#define INITIAL_KEYS 0
 byte coins;
+bool doorinhibitor = false;
 bool compass = false;
 void update_coins(byte new) {
   char disp[2] = "\x10 ";
@@ -159,6 +159,7 @@ void wait_frame();
 void pushable(EntityState* entity) {
   entity->x += playerx-oldplayerx;
   entity->y += playery-oldplayery;
+  doorinhibitor = true;
 }
 
 void horse_mount(EntityState* entity) {
@@ -388,6 +389,7 @@ void spider_retreat(EntityState* entity) {
 }
 
 void sign_read(EntityState*) {
+  byte i;
   switch (area) {
     case 2:
       dialogue("Sign", "<-- Forest  ----  Turlin -->");
@@ -397,6 +399,22 @@ void sign_read(EntityState*) {
       break;
     case 5:
       dialogue("End of the road", "Just forest from here on.");
+      break;
+    case 9:
+      dialogue("Where am I?", "I lost my key somewhwere");
+      break;
+    case 11:
+      dialogue("Warning:", "Monsters.");
+      for (i = 1; i <= 3; i++) {
+      	current_entities[i].entity = 7;
+        current_entities[i].x = TILE_SIZE*32;
+        current_entities[i].y = (TILE_SIZE*3)+(TILE_SIZE*3-8)*(i-1);
+      }
+      for (i = 4; i <= 5; i++) {
+      	current_entities[i].entity = 17;
+        current_entities[i].x = TILE_SIZE*i*5;
+        current_entities[i].y = TILE_SIZE*6-8;
+      }
       break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
@@ -471,6 +489,8 @@ void mayor_turt(EntityState*) {
   else if (!(flags[TURLIN]&LE_MONSTERS)) {
   	dialogue("Mayor Le", "Have you seen them?");
     	dialogue("Mayor Le", "The monsters.");
+        dialogue("Mayor Le", "People don't come here,");
+    	dialogue("Mayor Le", "Not since they appeared.");
     	flags[TURLIN]|=LE_MONSTERS;
   }
   else {
@@ -485,6 +505,87 @@ void mayor_turt(EntityState*) {
   }
   player_pushback();
 }
+
+void chest_collect(EntityState* entity) {
+  switch(area) {
+    case 8:
+      compass = true;
+      break;
+    case 12:
+      update_coins(coins+1);
+      flags[FOREST] |= COINS_1;
+      break;
+    case 10:
+      update_keys(keys+1);
+      flags[FOREST] |= KEYS_1;
+      break;
+  }
+  entity->entity = 0;
+}
+
+void chest_init(EntityState* entity) {
+  bool empty = false;
+  switch (area) {
+    case 8:
+  if (compass)
+    empty = true;
+  	break;
+    case 12:
+      if (flags[FOREST]&COINS_1) empty = true;
+      break;
+    case 10:
+      if (flags[FOREST]&KEYS_1) empty = true;
+      
+      
+  }
+  if (empty)
+    entity->entity = 0;
+}
+
+void solid_entity(EntityState*) {
+	player_pushback();
+}
+
+void bat_fly(EntityState* entity) {
+  entity->chr_offset = (anim&4) ? 4 : 0;
+  if (entity->y+TILE_SIZE*2 > playery)
+    entity->y--;
+  else if (entity->x+TILE_SIZE*2 > playerx && entity->x < playerx+TILE_SIZE*2)
+    entity->entity = 18;
+  else
+    entity->y += rand8()&1 ? -1 : 1;
+  
+  if (playerx > entity->x)
+    entity->x++;
+  else if (playerx < entity->x)
+    entity->x--;
+  else
+    entity->x+= rand8()&1 ? -2 : 2;
+  
+}
+
+void bat_attack(EntityState* entity) {
+  if (playerx > entity->x)
+    entity->x+=3;
+  else if (playerx < entity->x)
+    entity->x-=3;
+  if (playery > entity->y)
+    entity->y+=3;
+  else if (playery < entity->y)
+    entity->y-=3;
+}
+
+void bat_hit(EntityState* entity) {
+  damage(1);
+  entity->entity = 17;
+}
+
+void tunnel_door_inhibitor(EntityState* entity) {
+  doorinhibitor = true;
+  if (entity->x > TILE_SIZE*11 || entity->x < TILE_SIZE*9
+	|| entity->y < TILE_SIZE*5 || entity->y > TILE_SIZE*7)
+    doorinhibitor = false;
+} 
 
 // Entities
 const Entity entities[] = {
@@ -511,7 +612,18 @@ const Entity entities[] = {
   {0xb8, 2, fountain_of_health, NULL},
   // 13: Mayor turt
   {0xbc, 2 | OAM_FLIP_H, mayor_turt, NULL},
-  // 14: 
+  // 14: Chest
+  {0xc8, 0, chest_collect, NULL, NULL, chest_init, NULL},
+  // 15: Turtle Statue right facing
+  {0xbc, 0, solid_entity},
+  // 16: Turtle Statue left facing
+  {0xbc, 0 | OAM_FLIP_H, solid_entity},
+  // 17: Bat eye fly
+  {0xf0, 2, NULL, bat_fly, basic_die, NULL, basic_knockback},
+  // 18: Bat eye attack
+  {0xf0, 2, bat_hit, bat_attack, basic_die, NULL, basic_knockback},
+  // 19: Pushable Turtle Statue
+  {0x90, 2, pushable, tunnel_door_inhibitor},
   
 };
 
@@ -787,6 +899,7 @@ void main(void) {
   ppu_on_all();
   
 reset:
+  vrambuf_put(NTADR_A(0,2), "                              ", 32);
   // repeat forever
   load_area(INITIAL_AREA, 6*TILE_SIZE,6*TILE_SIZE-8);
   // Reset newx_scroll
@@ -871,6 +984,7 @@ reset:
     }
     
     // Process entities
+    doorinhibitor = false;
     for (i = 0; i < MAX_ENTITIES + (area == horse_area ? 1 : 0); i++) {
       if (current_entities[i].entity == 0)
         continue;
@@ -900,11 +1014,11 @@ reset:
     if (i & SOLID) {
       player_pushback();
     }
-    if (i & LOCKED)
+    if (i & OFFROAD)
       offroad = true;
     else
       offroad = false;
-    if (i & DOOR ) {
+    if (i & DOOR && !doorinhibitor) {
       wait_frame();
       if (i&LOCKED && keys == 0) {
         dialogue("Door is locked", "It seems you need a key");

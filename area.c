@@ -47,6 +47,8 @@ const Tile tiles[] = {
   {0x90, 0 | LARGE_DOOR4},	// 18: Grass door 4
   {0xcc, 0 | DOOR3},	// 19: Hidden door
   {0x90, 2 | GROUND | OFFROAD},	// 20: Dirty grass
+  {0xc4, 1 | DOOR1},	// 21: Staircase
+  {0x90, 1 | GROUND | OFFROAD},	// 22: Underground Land
 };
 
 const Collumn collumns[] = {
@@ -98,6 +100,14 @@ const Collumn collumns[] = {
   {{14,14,14,14,14,14,14,14,14,14,14,14}},
   // 27: Hidden tree path
   {{14,14,14,19,20,0,0,0,13,14,14,14}},
+  // 28: Staircase no path
+  {{14,14,14,12,0,0,21,0,13,14,14,14}},
+  // 29: Underground Staircase
+  {{7,7,7,7,22,22,21,22,7,7,7,7}},
+  // 30: Underground
+  {{7,7,7,7,22,22,22,22,7,7,7,7}},
+  // 31: Locked Underground Door
+  {{7,7,7,7,22,22,6,22,7,7,7,7}},
 };
 
 const Area areas[] = {
@@ -188,10 +198,11 @@ const Area areas[] = {
   {	// 6: Maze part 1
     64, {26,25,19,19,19,19,21,21,21,21,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,23,23,23,23,19,19,19,19,19,19,19,25,26},
     {	// Entities
+      {17, TILE_SIZE*3, TILE_SIZE*6-8}
     },
     {// Doors
       {},{},{},
-      {5, TILE_SIZE*1, TILE_SIZE*6-8},{},{},{7, TILE_SIZE*1, TILE_SIZE*6-8},
+      {5, TILE_SIZE*1, TILE_SIZE*6-8},{10,TILE_SIZE*1,TILE_SIZE*6-8},{},{7, TILE_SIZE*1, TILE_SIZE*6-8},
       {NULL_AREA},{NULL_AREA}
     },
     1,
@@ -201,18 +212,23 @@ const Area areas[] = {
   { // 7: Maze part 2
     64, {19,19,19,19,19,19,19,19,19,19,19,19,27,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,24,24,24,24,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,23,23,23,23,19,19,19,19,19,19,19,19,19},
     {	// Entities
+      {17, TILE_SIZE*12, TILE_SIZE*6-8},
+      {17, TILE_SIZE*40, TILE_SIZE*6-8}
     },
     {// Doors
       {},{},{8, TILE_SIZE*1, TILE_SIZE*6-8},
-      {},{},{},{},
-      {NULL_AREA},{6, TILE_SIZE*53-8, TILE_SIZE*10}
+      {12, TILE_SIZE*1, TILE_SIZE*6-8},{9, TILE_SIZE*1, TILE_SIZE*6-8},{},{11, 62*TILE_SIZE, TILE_SIZE*6-8},
+      {2, TILE_SIZE*1, TILE_SIZE*6-8},{6, TILE_SIZE*53-8, TILE_SIZE*10}
     },
     1,
-    EAST
+    WEST
   },
   {	// 8: Compass room
     15, {25,25,25,25,25,25,25,25,19,19,19,19,19,25,26,26},
     {	// Entities
+      {14, TILE_SIZE*10, TILE_SIZE*6-8},
+      {15, TILE_SIZE*8, TILE_SIZE*4-4},
+      {15, TILE_SIZE*8, TILE_SIZE*7}
     },
     {//Doors
       {},{},{},
@@ -222,8 +238,87 @@ const Area areas[] = {
     1,
     NORTH
   },
-  {	// 9:
-    
+  {	// 9: Dead End
+    15, {25,25,25,19,19,19,19,19,25,26,26,26,26,26,26,26},
+    {	// Entities
+      {10, TILE_SIZE*5, TILE_SIZE*6-8}
+    },
+    {// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{7, TILE_SIZE*32-8, TILE_SIZE*1},
+    },
+    1,
+    UNKNOWN
+  },
+  {	// 10: Left path
+    64, {19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,25,26},
+  {	// Entities
+    {14, TILE_SIZE*60, TILE_SIZE*6-8},
+    {7, TILE_SIZE*50, TILE_SIZE*7},
+    {7, TILE_SIZE*50, TILE_SIZE*4},
+    {7, TILE_SIZE*40, TILE_SIZE*6-8},
+    {17, TILE_SIZE*20, TILE_SIZE*6-8}
+  },
+  {	// Doors
+    {},{},{},
+    {9, TILE_SIZE*1, TILE_SIZE*6-8},{},{},{},
+    {NULL_AREA},{6, TILE_SIZE*8-8, TILE_SIZE*10}
+  },
+    1,
+    WEST
+  },
+  {	// 11: Monster Jumpscare
+    64, {26,25,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19},
+    {	// Entities
+      {10, TILE_SIZE*3, TILE_SIZE*6-8},
+      
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {7, TILE_SIZE*53-8, TILE_SIZE*10}, {NULL_AREA}
+    },
+    1,
+    SOUTH
+  }, 
+  {	// 12: Coin room
+    15, {25,25,25,25,25,25,25,25,19,19,19,19,19,25,26,26},
+    {	// Entities
+      {14, TILE_SIZE*10, TILE_SIZE*6-8}
+    },
+    {//Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{7, TILE_SIZE*32-8, TILE_SIZE*10}
+    },
+    1,
+    NORTH
+  },
+  {	// 13: Entrance to the tunnel
+    15, {25,25,25,25,25,25,25,25,19,19,28,19,19,25,26,26},
+    {	// Entities
+      {19, TILE_SIZE*10, TILE_SIZE*6},
+    },
+    {//Doors
+      {14, TILE_SIZE*2, TILE_SIZE*6},{},{},
+      {},{},{},{},
+      {NULL_AREA},{7, TILE_SIZE*62, TILE_SIZE*6-8}
+    },
+    1,
+    NORTH
+  },
+  {	// 14: Underground Tunnel
+    40, {10,29,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,31,10},
+    {	// Entities
+    },
+    { // Doors
+      {13, TILE_SIZE*10, TILE_SIZE*5},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {NULL_AREA}
+    },
+    1,
+    NORTH
   }
   
 };
