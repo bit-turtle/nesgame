@@ -27,5 +27,7 @@ extern byte flags[16];
 #define COINS_1	0b10000000
 #define KEYS_1	0b01000000
 #define COINS_2 0b00100000
+#define KEYS_2	0b00010000
+#define COINS_3	0b00001000
 
 #endif

@@ -51,6 +51,11 @@ const Tile tiles[] = {
   {0x90, 2 | GROUND | OFFROAD},	// 20: Dirty grass
   {0xc4, 1 | DOOR1},	// 21: Staircase
   {0x90, 1 | GROUND | OFFROAD},	// 22: Underground Land
+  {0x90, 1 | DOOR1},	// 23: Underground door1
+  {0x90, 1 | DOOR2},	// 24: Underground door2
+  {0x90, 1 | DOOR3},	// 25: Underground door3
+  {0xa0, 1 | GROUND},	// 26: Red Block marker
+  
 };
 
 const Collumn collumns[] = {
@@ -110,6 +115,20 @@ const Collumn collumns[] = {
   {{7,7,7,7,22,22,22,22,7,7,7,7}},
   // 31: Locked Underground Door
   {{7,7,7,7,22,22,6,22,7,7,7,7}},
+  // 32: Underground Path Decision1,
+  {{23,22,22,22,22,22,22,22,7,7,7,7}},
+  // 33: Underground path decision2
+  {{25,22,22,22,22,22,22,22,7,7,7,7}},
+  // 34: Underground path decision3
+  {{24,22,22,22,22,22,22,22,7,7,7,7}},
+  // 35: Wide Underground
+  {{7,7,22,22,22,22,22,22,22,22,7,7}},
+  // 36: Underground backtrack
+  {{7,7,7,7,22,22,22,22,22,22,22,24}},
+  // 37: Wide Underground for puzzle
+  {{7,7,22,26,22,22,22,26,26,22,7,7}},
+  // 38: Wide Underground for puzzle exit
+  {{7,7,22,22,22,22,21,22,22,22,7,7}},
 };
 
 const Area areas[] = {
@@ -316,7 +335,7 @@ const Area areas[] = {
       {14, TILE_SIZE*25, TILE_SIZE*4}
     },
     { // Doors
-      {13, TILE_SIZE*10, TILE_SIZE*5},{},{},
+      {13, TILE_SIZE*10, TILE_SIZE*5},{16, TILE_SIZE*16-8, TILE_SIZE*7},{},
       {},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
@@ -326,12 +345,12 @@ const Area areas[] = {
   {	// 15: Past Turlin
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
-      {20, TILE_SIZE*20, TILE_SIZE*6-8, GREEN_SPIDER_HP},
-      {20, TILE_SIZE*21, TILE_SIZE*5, GREEN_SPIDER_HP},
-      {20, TILE_SIZE*21, TILE_SIZE*6, GREEN_SPIDER_HP},
-      {20, 22*TILE_SIZE, 5*TILE_SIZE-8, GREEN_SPIDER_HP},
-      {20, 22*TILE_SIZE, 6*TILE_SIZE-8, GREEN_SPIDER_HP},
-      {20, 22*TILE_SIZE, 7*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {20, 10*TILE_SIZE, TILE_SIZE*6-8, GREEN_SPIDER_HP},
+      {20, 11*TILE_SIZE, TILE_SIZE*5, GREEN_SPIDER_HP},
+      {20, 11*TILE_SIZE, TILE_SIZE*6, GREEN_SPIDER_HP},
+      {20, 12*TILE_SIZE, 5*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {20, 12*TILE_SIZE, 6*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {20, 12*TILE_SIZE, 7*TILE_SIZE-8, GREEN_SPIDER_HP},
     },
     {	// Doors
       {},{},{},
@@ -340,6 +359,87 @@ const Area areas[] = {
     },
     song_grass,
     NORTH
+  },
+  {	// 16: Underground Maze
+    32, {10,32,32,32,32,30,30,30, 30,30,30,30,30,30,34,34,34,34,30,30,30,30,30,30, 30,30,30,33,33,33,33,10},
+    {	// Entities
+    },
+    {	// Doors
+      {19, TILE_SIZE*16-8, TILE_SIZE*10},{18, TILE_SIZE*1, TILE_SIZE*6-8},{17, TILE_SIZE*1, TILE_SIZE*6-8},
+      {},{},{},{},
+      {NULL_AREA}, {NULL_AREA}
+    },
+    song_dungeon,
+    UNKNOWN
+  },
+  {	// 17: Monster room
+    15, {30,30,30,30,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
+    {	// Entities
+      {17, TILE_SIZE*6,TILE_SIZE*4},
+      {17, TILE_SIZE*9,TILE_SIZE*4},
+      {14, TILE_SIZE*11, TILE_SIZE*6-8},
+      {10, TILE_SIZE*8-8, TILE_SIZE*6-8}
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {16, TILE_SIZE*29-8, TILE_SIZE*1}
+    },
+    song_dungeon,
+    UNKNOWN
+  }, 
+  {	// 18: Sign room
+    15, {30,30,30,30,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
+    {	// Entities
+      {10, TILE_SIZE*8-8,TILE_SIZE*6-8},
+      {14, TILE_SIZE*11, TILE_SIZE*6-8},
+      {17, TILE_SIZE*8-8, TILE_SIZE*4}
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {16, TILE_SIZE*16-8, TILE_SIZE*1}
+    },
+    song_dungeon,
+    UNKNOWN
+  },
+  {	// 19: Underground Maze2
+    32, {10,32,32,32,32,30,30,30, 30,30,30,30,30,30,36,36,36,36,30,30,30,30,30,30, 30,30,30,33,33,33,33,10},
+    {	// Entities
+    },
+    {	// Doors
+      {17, TILE_SIZE*1, TILE_SIZE*6-8},{16, TILE_SIZE*3-8, TILE_SIZE*1},{20, TILE_SIZE*1, TILE_SIZE*6-8},
+      {},{},{},{},
+      {NULL_AREA}, {NULL_AREA}
+    },
+    song_dungeon,
+    UNKNOWN
+  },
+  {	// 20: Puzzle for boss battle
+    15, {30,30,30,30,35,37,35,37,35,37,35,38,10,10,10,10,10,10,10},
+    {	// Entities
+      {23, TILE_SIZE*5, TILE_SIZE*6-8},
+      {23, TILE_SIZE*7, TILE_SIZE*6-8},
+      {23, TILE_SIZE*9, TILE_SIZE*6-8},
+      {10, TILE_SIZE*3,TILE_SIZE*4},
+      {24, TILE_SIZE*11, TILE_SIZE*6}
+    },
+    {	// Doors
+      {21, TILE_SIZE*1, TILE_SIZE*6-8},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {19, TILE_SIZE*29-8, TILE_SIZE*2}
+    },
+    song_dungeon,
+    UNKNOWN
+  },
+  {	// 21: Boss battle
+    15, {10,35,35,35,35,35,35,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
+    {	// Entities
+    },
+    {	// Doors
+    },
+    song_boss,
+    UNKNOWN
   }
   
 };

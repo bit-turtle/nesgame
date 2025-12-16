@@ -41,7 +41,7 @@ extern byte music_data_nes_game_music[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 15
+#define INITIAL_AREA 0
 #define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
@@ -406,7 +406,7 @@ void sign_read(EntityState*) {
       dialogue("Welcome to Turlin!", "Population: 2");
       break;
     case 5:
-      dialogue("Beware ...", "Beware of the forest");
+      dialogue("End of the road.", "Continue if you dare");
       break;
     case 9:
       dialogue("Where am I?", "I lost my key somewhwere");
@@ -424,6 +424,15 @@ void sign_read(EntityState*) {
         current_entities[i].x = TILE_SIZE*i*5;
         current_entities[i].y = TILE_SIZE*6-8;
       }
+      break;
+    case 18:
+      dialogue("Which one?", "Choose your path wisely");
+      break;
+    case 20:
+      dialogue("Position the turtles.", "Your path shows you the way.");
+      break;
+    case 17:
+      dialogue("...", "     \xbd\xbf     \xbd\xbf       ");
       break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
@@ -467,8 +476,8 @@ void basic_die(EntityState* entity) {
 }
 
 void basic_knockback(EntityState* entity) {
-  if (dir == LEFT) entity->x-=TILE_SIZE*2;
-  else entity->x+=TILE_SIZE*2;
+  if (dir == LEFT) entity->x-=TILE_SIZE*2+8;
+  else entity->x+=TILE_SIZE*2+8;
 }
 
 void mayor_turt(EntityState*) {
@@ -532,6 +541,14 @@ void chest_collect(EntityState* entity) {
       update_coins(coins+1);
       flags[FOREST] |= COINS_2;
       break;
+    case 18:
+      update_keys(keys+1);
+      flags[FOREST] |= KEYS_2;
+      break;
+    case 17:
+      update_coins(coins+2);
+      flags[FOREST] |= COINS_3;
+      break;
   }
   entity->entity = 0;
 }
@@ -551,6 +568,12 @@ void chest_init(EntityState* entity) {
       break;
     case 14:
       if (flags[FOREST]&COINS_2) empty = true;
+      break;
+    case 18:
+      if (flags[FOREST]&KEYS_2) empty = true;
+      break;
+    case 17:
+      if (flags[FOREST]&COINS_3) empty = true;
       break;
       
       
@@ -651,6 +674,32 @@ void strong_spider_retreat(EntityState* entity) {
     entity->entity = 21;
 }
 
+void maze_puzzle_solved(EntityState* entity) {
+  bool solved = true;
+  doorinhibitor = true;
+  if (current_entities[0].y != TILE_SIZE*8)
+    solved = false;
+  
+  if (current_entities[1].y != TILE_SIZE*3)
+    solved = false;
+  
+  if (current_entities[2].y != TILE_SIZE*8)
+    solved = false;
+    
+  if (solved) {
+    doorinhibitor = false;
+    entity->entity = 0;
+  }
+}
+
+void puzzle_pushable(EntityState* entity) {
+  entity->y += playery-oldplayery;
+  if (entity->y < TILE_SIZE*3)
+    entity->y = TILE_SIZE*3;
+  if (entity->y > TILE_SIZE*8)
+    entity->y = TILE_SIZE*8;
+}
+
 // Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
@@ -694,6 +743,10 @@ const Entity entities[] = {
   {0xb0, 2, strong_spider_hit, strong_spider_attack, basic_die, NULL, basic_knockback},
   // 22: Stronger Spider retreat
   {0xb0, 2, NULL, strong_spider_retreat, basic_die, NULL, basic_knockback},
+  // 23: Pushable Brick
+  {0xbc, 0, puzzle_pushable, NULL},
+  // 24: Puzzle solver door inhibitor
+  {0x90, 1, NULL, maze_puzzle_solved}
 };
 
 
@@ -956,7 +1009,7 @@ void main(void) {
   vram_fill(0x3, 32);
   // top bar split sprite
   oam_clear();
-  oam_spr(0, 30, 0x80, 2, 0);
+  oam_spr(8, 30, 1, 0, 0);
   // vrambuf initialization
   vrambuf_clear();
   set_vram_update(updbuf);
