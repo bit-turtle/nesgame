@@ -41,7 +41,7 @@ extern byte music_data_nes_game_music[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 0
+#define INITIAL_AREA 15
 #define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
@@ -122,7 +122,10 @@ void damage(byte dmg) {
   if (dmg < PLAYER_KNOCKBACK_LIMIT) {
   playerx = oldplayerx+(dir == RIGHT? -dmg : dmg);
   playery = oldplayery;
+    if ( dir == RIGHT && oldplayerx < playerx || dir == LEFT && oldplayerx > playerx)
+      playerx = oldplayerx;
   }
+  if (!knockback_flip)
   dir = dir==RIGHT? LEFT:RIGHT;
   knockback_flip = true;
   if (damage_cooldown != 0)
@@ -607,13 +610,25 @@ void strong_spider_hit(EntityState* entity) {
 }
 
 void strong_spider_attack(EntityState* entity) {
+  byte sign = 0;
   if (entity->memory < 10) entity->memory++;
+  if (playerx > entity->x)
+    sign += 1;
+  else 
+    sign -= 1;
   if (entity->x > playerx) {
     entity->x -= entity->memory;
   }
   else if (entity->x < playerx) {
     entity->x += entity->memory;
   }
+  if (playerx > entity->x)
+    sign += 1;
+  else 
+    sign -= 1;
+  if (sign == 0)
+    entity->x = playerx;
+  
   if (entity->y > playery) {
   	entity->y -= entity->memory;
   }
@@ -624,10 +639,15 @@ void strong_spider_attack(EntityState* entity) {
 
 void strong_spider_retreat(EntityState* entity) {
   entity->memory = 0;
-  entity->x += 8 + rand8()&7;
-  entity->y += (rand8()&7)<<1;
-  entity->y -= (rand8()&7)<<1;
-  if (entity->x-(TILE_SIZE*4-8) > playerx+TILE_SIZE*4)
+  entity->x += 12 + rand8()&7;
+  entity->y += rand8()&7;
+  entity->y -= rand8()&7;
+  if (entity->y > playery)
+    entity->y += 1;
+  if (entity->y < playery)
+    entity->y -= 1;
+  
+  if (entity->x > playerx+TILE_SIZE*4)
     entity->entity = 21;
 }
 
@@ -960,7 +980,7 @@ reset:
   playerhealth = DEFAULT_MAX_HEALTH-1;
   damage(255);
   damage_cooldown = 0;
-  dir = RIGHT;
+  dir = LEFT;
   // initial horse
   horse = INITIAL_HORSE;
   compass = INITIAL_COMPASS;

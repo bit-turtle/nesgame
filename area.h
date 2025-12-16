@@ -32,6 +32,10 @@ typedef struct Tile {
 
 #define HP(hp) (hp-1)
 
+#define BAT_HP		HP(1)
+#define SPIDER_HP	HP(2)
+#define GREEN_SPIDER_HP	HP(4)
+
 const extern Tile tiles[256];
 
 typedef struct Collumn {

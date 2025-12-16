@@ -3,6 +3,7 @@
 #include "offscreen.h"
 #include "music_songlist.inc"
 
+
 byte area = 0;
 
 void render_collumn_ptr(const Collumn* collumn, const Collumn* collumn2, byte x, byte x2) {
@@ -118,9 +119,9 @@ const Area areas[] = {
       {1, 31*TILE_SIZE-8, 2*TILE_SIZE},	// Bobbert's Horse
       {4, 30*TILE_SIZE, 8*TILE_SIZE}, // Bobbert
       // Spiders
-      {7, 16*TILE_SIZE, 3*TILE_SIZE, 3},
-      {7, 16*TILE_SIZE, 6*TILE_SIZE-8, 3},
-      {7, 16*TILE_SIZE, 8*TILE_SIZE, 3},
+      {7, 16*TILE_SIZE, 3*TILE_SIZE, SPIDER_HP},
+      {7, 16*TILE_SIZE, 6*TILE_SIZE-8, SPIDER_HP},
+      {7, 16*TILE_SIZE, 8*TILE_SIZE, SPIDER_HP},
     },
     { // Doors
       {1,1*TILE_SIZE,6*TILE_SIZE-8},
@@ -256,9 +257,9 @@ const Area areas[] = {
     64, {19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,25,26},
   {	// Entities
     {14, TILE_SIZE*60, TILE_SIZE*6-8},
-    {7, TILE_SIZE*50, TILE_SIZE*7, 3},
-    {7, TILE_SIZE*50, TILE_SIZE*4, 3},
-    {7, TILE_SIZE*40, TILE_SIZE*6-8, 3},
+    {7, TILE_SIZE*50, TILE_SIZE*7, SPIDER_HP},
+    {7, TILE_SIZE*50, TILE_SIZE*4, SPIDER_HP},
+    {7, TILE_SIZE*40, TILE_SIZE*6-8, SPIDER_HP},
     {17, TILE_SIZE*20, TILE_SIZE*6-8}
   },
   {	// Doors
@@ -325,12 +326,12 @@ const Area areas[] = {
   {	// 15: Past Turlin
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
-      {20, TILE_SIZE*20, TILE_SIZE*6-8},
-      {20, TILE_SIZE*21, TILE_SIZE*5},
-      {20, TILE_SIZE*21, TILE_SIZE*6},
-      {20, 22*TILE_SIZE, 5*TILE_SIZE-8, 3},
-      {20, 22*TILE_SIZE, 6*TILE_SIZE-8, 3},
-      {20, 22*TILE_SIZE, 7*TILE_SIZE-8, 3},
+      {20, TILE_SIZE*20, TILE_SIZE*6-8, GREEN_SPIDER_HP},
+      {20, TILE_SIZE*21, TILE_SIZE*5, GREEN_SPIDER_HP},
+      {20, TILE_SIZE*21, TILE_SIZE*6, GREEN_SPIDER_HP},
+      {20, 22*TILE_SIZE, 5*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {20, 22*TILE_SIZE, 6*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {20, 22*TILE_SIZE, 7*TILE_SIZE-8, GREEN_SPIDER_HP},
     },
     {	// Doors
       {},{},{},
