@@ -1,7 +1,4 @@
-sfx_win = 0
-sfx_max = 1
-
-.if SFX_STRINGS
-sfx_strings:
-.asciiz "Win"
-.endif
+#define sfx_win 0
+#define sfx_hurt 1
+#define sfx_sword 2
+#define sfx_max 3
