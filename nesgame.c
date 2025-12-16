@@ -19,11 +19,8 @@
 // FamiTone2
 //#link "famitone2.s"
 //#link "music.s"
-//#link "sfx.s"
 #include "music_songlist.inc"
-#include "sfx_sfxlist.inc"
-extern byte music_data_test_song[];
-extern byte sounds[];
+extern byte music_data_nes_game_music[];
 
 // String
 #include <string.h>
@@ -44,7 +41,7 @@ extern byte sounds[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 0
+#define INITIAL_AREA 15
 #define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
@@ -126,7 +123,6 @@ void damage(byte dmg) {
   dir = dir==RIGHT? LEFT:RIGHT;
   if (damage_cooldown != 0)
     return;
-  sfx_play(0, 0);
   damage_cooldown = DAMAGE_COOLDOWN;
   playerhealth -= dmg;
   if (dmg != 255 && playerhealth > i) {
@@ -908,8 +904,7 @@ void main(void) {
   // display
   nmi_set_callback(start_frame);
   // Famitone
-  famitone_init(music_data_test_song);
-  sfx_init(sounds);
+  famitone_init(music_data_nes_game_music);
   //enable rendering
   ppu_on_all();
   

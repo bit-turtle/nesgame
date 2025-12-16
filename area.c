@@ -1,6 +1,7 @@
 
 #include "area.h"
 #include "offscreen.h"
+#include "music_songlist.inc"
 
 byte area = 0;
 
@@ -126,7 +127,7 @@ const Area areas[] = {
       {},{},{},{},{},{},
       {2,32*TILE_SIZE-8,1*TILE_SIZE},{NULL_AREA}
     },
-    0,
+    song_grass,
     NORTH
   },
   { // 1: Bobbert's House
@@ -139,7 +140,7 @@ const Area areas[] = {
       {},{},{},{},{},{},{},
       {NULL_AREA}, {0, 28*TILE_SIZE, 1*TILE_SIZE}
     },
-    0,
+    song_grass,
     EAST
   },
   {	// 2: Road
@@ -149,7 +150,7 @@ const Area areas[] = {
     },
     {// Doors
       {},{},{},
-      {0, 40*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
+      {0, 40*TILE_SIZE, 6*TILE_SIZE-8},{15, TILE_SIZE*1, TILE_SIZE*6-8},{},{},
       {3, 16*TILE_SIZE-8,1*TILE_SIZE},{5, 23*TILE_SIZE, 6*TILE_SIZE-8}
     },
     0,
@@ -166,7 +167,7 @@ const Area areas[] = {
       {2, 62*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
-    4,
+    song_turlin,
     NORTH
   },
   {	// 4: Mayor Turt Le's House
@@ -179,7 +180,7 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA},{3, TILE_SIZE*8, TILE_SIZE*1}
     },
-    4,
+    song_turlin,
     WEST
   },
   {	// 5: Entrance to forest
@@ -192,7 +193,7 @@ const Area areas[] = {
       {},{},{},{},
       {2, TILE_SIZE*1, TILE_SIZE*6-8},{6, 32*TILE_SIZE-8, 1*TILE_SIZE}
     },
-    1,
+    song_forest,
     EAST
   },
   {	// 6: Maze part 1
@@ -205,7 +206,7 @@ const Area areas[] = {
       {5, TILE_SIZE*1, TILE_SIZE*6-8},{10,TILE_SIZE*1,TILE_SIZE*6-8},{},{7, TILE_SIZE*1, TILE_SIZE*6-8},
       {NULL_AREA},{NULL_AREA}
     },
-    1,
+    song_forest,
     NORTH
   },
   
@@ -220,7 +221,7 @@ const Area areas[] = {
       {12, TILE_SIZE*1, TILE_SIZE*6-8},{9, TILE_SIZE*1, TILE_SIZE*6-8},{},{11, 62*TILE_SIZE, TILE_SIZE*6-8},
       {13, TILE_SIZE*1, TILE_SIZE*6-8},{6, TILE_SIZE*53-8, TILE_SIZE*10}
     },
-    1,
+    song_forest,
     WEST
   },
   {	// 8: Compass room
@@ -248,7 +249,7 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA},{7, TILE_SIZE*32-8, TILE_SIZE*1},
     },
-    1,
+    song_forest,
     UNKNOWN
   },
   {	// 10: Left path
@@ -265,7 +266,7 @@ const Area areas[] = {
     {9, TILE_SIZE*1, TILE_SIZE*6-8},{},{},{},
     {NULL_AREA},{6, TILE_SIZE*8-8, TILE_SIZE*10}
   },
-    1,
+    song_forest,
     WEST
   },
   {	// 11: Monster Jumpscare
@@ -279,7 +280,7 @@ const Area areas[] = {
       {},{},{},{},
       {7, TILE_SIZE*53-8, TILE_SIZE*10}, {NULL_AREA}
     },
-    1,
+    song_forest,
     SOUTH
   }, 
   {	// 12: Coin room
@@ -292,7 +293,7 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA},{7, TILE_SIZE*32-8, TILE_SIZE*10}
     },
-    1,
+    song_forest,
     NORTH
   },
   {	// 13: Entrance to the tunnel
@@ -305,7 +306,7 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA},{7, TILE_SIZE*62, TILE_SIZE*6-8}
     },
-    1,
+    song_forest,
     NORTH
   },
   {	// 14: Underground Tunnel
@@ -318,16 +319,20 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
-    1,
+    song_dungeon,
     NORTH
   },
   {	// 15: Past Turlin
-    64, {},
+    64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
+      {}
     },
     {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{2, TILE_SIZE*57-8, TILE_SIZE*10}
     },
-    1,
+    song_grass,
     NORTH
   }
   
