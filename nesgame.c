@@ -41,7 +41,7 @@ extern byte music_data_nes_game_music[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 15
+#define INITIAL_AREA 0
 #define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
@@ -114,13 +114,17 @@ byte MAX_PLAYER_HEALTH = 12;
 #define INITIAL_HEALTH 12
 byte playerhealth;
 #define DAMAGE_COOLDOWN 12
+#define PLAYER_KNOCKBACK_LIMIT 8
 byte damage_cooldown = 0;
-#define PLAYER_KNOCKBACK 3
+bool knockback_flip = false;
 void damage(byte dmg) {
   byte i, j;
-  playerx = oldplayerx+(dir == RIGHT? -PLAYER_KNOCKBACK : PLAYER_KNOCKBACK);
+  if (dmg < PLAYER_KNOCKBACK_LIMIT) {
+  playerx = oldplayerx+(dir == RIGHT? -dmg : dmg);
   playery = oldplayery;
+  }
   dir = dir==RIGHT? LEFT:RIGHT;
+  knockback_flip = true;
   if (damage_cooldown != 0)
     return;
   damage_cooldown = DAMAGE_COOLDOWN;
@@ -359,7 +363,7 @@ void bobbert_house(EntityState*) {
 
 void spider_wait(EntityState* entity) {
   if (playerx+4*TILE_SIZE > entity->x && playerx < entity->x+4*TILE_SIZE)
-    entity->entity = 8;
+    entity->entity = (entity->entity == 7) ? 8 : 21;
 }
 
 #define SPIDER_SPEED 4
@@ -393,13 +397,13 @@ void sign_read(EntityState*) {
   byte i;
   switch (area) {
     case 2:
-      dialogue("Sign", "<-- Forest  ----  Turlin -->");
+      dialogue("Sign", "<-- Forest ------ Turlin -->");
       break;
     case 3:
       dialogue("Welcome to Turlin!", "Population: 2");
       break;
     case 5:
-      dialogue("End of the road", "Just forest from here on.");
+      dialogue("Beware ...", "Beware of the forest");
       break;
     case 9:
       dialogue("Where am I?", "I lost my key somewhwere");
@@ -597,6 +601,36 @@ void tunnel_door_inhibitor(EntityState* entity) {
     doorinhibitor = false;
 } 
 
+void strong_spider_hit(EntityState* entity) {
+  damage(5);
+  entity->entity = 22;
+}
+
+void strong_spider_attack(EntityState* entity) {
+  if (entity->memory < 10) entity->memory++;
+  if (entity->x > playerx) {
+    entity->x -= entity->memory;
+  }
+  else if (entity->x < playerx) {
+    entity->x += entity->memory;
+  }
+  if (entity->y > playery) {
+  	entity->y -= entity->memory;
+  }
+  else if (entity->y < playery) {
+  	entity->y += entity->memory;
+  }
+}
+
+void strong_spider_retreat(EntityState* entity) {
+  entity->memory = 0;
+  entity->x += 8 + rand8()&7;
+  entity->y += (rand8()&7)<<1;
+  entity->y -= (rand8()&7)<<1;
+  if (entity->x-(TILE_SIZE*4-8) > playerx+TILE_SIZE*4)
+    entity->entity = 21;
+}
+
 // Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
@@ -632,9 +666,14 @@ const Entity entities[] = {
   {0xf0, 2, NULL, bat_fly, basic_die, NULL, basic_knockback},
   // 18: Bat eye attack
   {0xf0, 2, bat_hit, bat_attack, basic_die, NULL, basic_knockback},
-  // 19: Pushable Turtle Statue
+  // 19: Pushable Grass Cover
   {0x90, 2, pushable, tunnel_door_inhibitor},
-  
+  // 20: Stronger Spider wait
+  {0xb0, 2, NULL, spider_wait},
+  // 21: Stonger Spider attack
+  {0xb0, 2, strong_spider_hit, strong_spider_attack, basic_die, NULL, basic_knockback},
+  // 22: Stronger Spider retreat
+  {0xb0, 2, NULL, strong_spider_retreat, basic_die, NULL, basic_knockback},
 };
 
 
@@ -909,6 +948,7 @@ void main(void) {
   ppu_on_all();
   
 reset:
+  knockback_flip = false;
   vrambuf_put(NTADR_A(0,2), "                              ", 32);
   // repeat forever
   load_area(INITIAL_AREA, 6*TILE_SIZE,6*TILE_SIZE-8);
@@ -945,6 +985,11 @@ reset:
     // Render
     
     update_offscreen(dir); 
+    
+    if (knockback_flip) {
+      	dir = (dir == LEFT) ? RIGHT : LEFT;
+    	knockback_flip = false;
+    }
     // Controls
     controls();
     anim++;

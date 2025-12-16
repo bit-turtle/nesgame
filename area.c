@@ -236,7 +236,7 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA},{7, TILE_SIZE*12, TILE_SIZE*4}
     },
-    1,
+    song_forest,
     NORTH
   },
   {	// 9: Dead End
@@ -325,7 +325,12 @@ const Area areas[] = {
   {	// 15: Past Turlin
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
-      {}
+      {20, TILE_SIZE*20, TILE_SIZE*6-8},
+      {20, TILE_SIZE*21, TILE_SIZE*5},
+      {20, TILE_SIZE*21, TILE_SIZE*6},
+      {20, 22*TILE_SIZE, 5*TILE_SIZE-8, 3},
+      {20, 22*TILE_SIZE, 6*TILE_SIZE-8, 3},
+      {20, 22*TILE_SIZE, 7*TILE_SIZE-8, 3},
     },
     {	// Doors
       {},{},{},
