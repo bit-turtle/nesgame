@@ -26,5 +26,6 @@ extern byte flags[16];
 #define FOREST 2
 #define COINS_1	0b10000000
 #define KEYS_1	0b01000000
+#define COINS_2 0b00100000
 
 #endif

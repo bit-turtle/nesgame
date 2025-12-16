@@ -19,7 +19,11 @@
 // FamiTone2
 //#link "famitone2.s"
 //#link "music.s"
+//#link "sfx.s"
+#include "music_songlist.inc"
+#include "sfx_sfxlist.inc"
 extern byte music_data_test_song[];
+extern byte sounds[];
 
 // String
 #include <string.h>
@@ -40,8 +44,8 @@ extern byte music_data_test_song[];
 #include "flags.h"
 //#link "flags.c"
 
-#define INITIAL_AREA 13
-#define INITIAL_WEAPON 1
+#define INITIAL_AREA 0
+#define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
 const byte weapon_damage[] = {3, 2, 4, 1};
@@ -122,6 +126,7 @@ void damage(byte dmg) {
   dir = dir==RIGHT? LEFT:RIGHT;
   if (damage_cooldown != 0)
     return;
+  sfx_play(0, 0);
   damage_cooldown = DAMAGE_COOLDOWN;
   playerhealth -= dmg;
   if (dmg != 255 && playerhealth > i) {
@@ -409,6 +414,7 @@ void sign_read(EntityState*) {
       	current_entities[i].entity = 7;
         current_entities[i].x = TILE_SIZE*32;
         current_entities[i].y = (TILE_SIZE*3)+(TILE_SIZE*3-8)*(i-1);
+        current_entities[i].health = 3;
       }
       for (i = 4; i <= 5; i++) {
       	current_entities[i].entity = 17;
@@ -519,6 +525,10 @@ void chest_collect(EntityState* entity) {
       update_keys(keys+1);
       flags[FOREST] |= KEYS_1;
       break;
+    case 14:
+      update_coins(coins+1);
+      flags[FOREST] |= COINS_2;
+      break;
   }
   entity->entity = 0;
 }
@@ -535,6 +545,10 @@ void chest_init(EntityState* entity) {
       break;
     case 10:
       if (flags[FOREST]&KEYS_1) empty = true;
+      break;
+    case 14:
+      if (flags[FOREST]&COINS_2) empty = true;
+      break;
       
       
   }
@@ -895,6 +909,7 @@ void main(void) {
   nmi_set_callback(start_frame);
   // Famitone
   famitone_init(music_data_test_song);
+  sfx_init(sounds);
   //enable rendering
   ppu_on_all();
   

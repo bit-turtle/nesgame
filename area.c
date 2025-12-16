@@ -218,7 +218,7 @@ const Area areas[] = {
     {// Doors
       {},{},{8, TILE_SIZE*1, TILE_SIZE*6-8},
       {12, TILE_SIZE*1, TILE_SIZE*6-8},{9, TILE_SIZE*1, TILE_SIZE*6-8},{},{11, 62*TILE_SIZE, TILE_SIZE*6-8},
-      {2, TILE_SIZE*1, TILE_SIZE*6-8},{6, TILE_SIZE*53-8, TILE_SIZE*10}
+      {13, TILE_SIZE*1, TILE_SIZE*6-8},{6, TILE_SIZE*53-8, TILE_SIZE*10}
     },
     1,
     WEST
@@ -255,9 +255,9 @@ const Area areas[] = {
     64, {19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,25,26},
   {	// Entities
     {14, TILE_SIZE*60, TILE_SIZE*6-8},
-    {7, TILE_SIZE*50, TILE_SIZE*7},
-    {7, TILE_SIZE*50, TILE_SIZE*4},
-    {7, TILE_SIZE*40, TILE_SIZE*6-8},
+    {7, TILE_SIZE*50, TILE_SIZE*7, 3},
+    {7, TILE_SIZE*50, TILE_SIZE*4, 3},
+    {7, TILE_SIZE*40, TILE_SIZE*6-8, 3},
     {17, TILE_SIZE*20, TILE_SIZE*6-8}
   },
   {	// Doors
@@ -311,11 +311,21 @@ const Area areas[] = {
   {	// 14: Underground Tunnel
     40, {10,29,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,31,10},
     {	// Entities
+      {14, TILE_SIZE*25, TILE_SIZE*4}
     },
     { // Doors
       {13, TILE_SIZE*10, TILE_SIZE*5},{},{},
       {},{},{},{},
       {NULL_AREA}, {NULL_AREA}
+    },
+    1,
+    NORTH
+  },
+  {	// 15: Past Turlin
+    64, {},
+    {	// Entities
+    },
+    {	// Doors
     },
     1,
     NORTH
