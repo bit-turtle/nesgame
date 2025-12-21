@@ -119,7 +119,7 @@ const Collumn collumns[] = {
   {{23,22,22,22,22,22,22,22,7,7,7,7}},
   // 33: Underground path decision2
   {{25,22,22,22,22,22,22,22,7,7,7,7}},
-  // 34: Underground path decision3
+  // 34: Underground path decision3 with hidden backwards
   {{24,22,22,22,22,22,22,22,7,7,7,7}},
   // 35: Wide Underground
   {{7,7,22,22,22,22,22,22,22,22,7,7}},
@@ -345,7 +345,10 @@ const Area areas[] = {
   {	// 15: Past Turlin
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
-      {7, 14*TILE_SIZE, TILE_SIZE*6-8, GREEN_SPIDER_HP},
+      {7, 14*TILE_SIZE, TILE_SIZE*6-8, SPIDER_HP},
+      {20, 20*TILE_SIZE, TILE_SIZE*6-8, GREEN_SPIDER_HP},
+      {20, 40*TILE_SIZE, TILE_SIZE*4, GREEN_SPIDER_HP},
+      {20, 40*TILE_SIZE, TILE_SIZE*7, GREEN_SPIDER_HP},
     },
     {	// Doors
       {},{},{},

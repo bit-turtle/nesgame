@@ -59,12 +59,25 @@ const byte weapon_damage[] = {3, 2, 4, 1};
 
 word deaths = 0;
 void death() {
-  char counter[3] = "\x26  ";
+  char counter[4] = "\x26   ";
   deaths = bcd_add(deaths, 1);
-  counter[1] = 0x30+((deaths>>4)&0xf);
-  counter[counter[1] == 0x30 ? 1 : 2] = 0x30+deaths;
-  vrambuf_put(NTADR_A(18, 2), counter, 3);
+  counter[1] = 0x30+((deaths>>8)&0xf);
+  counter[deaths > 0x99 ? 2 : 1] = 0x30+((deaths>>4)&0xf);
+  counter[deaths > 9 ? (deaths > 0x99 ? 3 : 2) : 1] = 0x30+(deaths&0xf);
+  vrambuf_put(NTADR_A(16, 2), counter, 4);
 }
+char* death_messages[10] = {
+	"Just a mild inconvenience",
+  	"Pretend that didn't happen",
+  	"Time travel saves the day",
+  	"Maybe swing earlier?",
+ 	"This counter goes to 999",
+  	"Running is strategic",
+  	"It could have been worse",
+  	"Timing is critical.",
+  	"It saves while loading.",
+  	"There are 10 of these",
+};
 
 byte coins;
 bool doorinhibitor = false;
@@ -106,8 +119,8 @@ byte dir = RIGHT;
 #define PLAYER_RUN_MIN_HEALTH 6
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
-#define SPIDER_DAMAGE 2
-#define GREEN_SPIDER_DAMAGE 3
+#define SPIDER_DAMAGE 3
+#define GREEN_SPIDER_DAMAGE 4
 byte playerspeed = 0;
 bool shield = false;
 #define ATTACK_TIME 8
@@ -225,6 +238,9 @@ void bobbert_walk(EntityState* entity) {
     entity->chr_offset = 0;
     dialogue("?", "My soup can heal you");
     dialogue("Bobbert", "By the way, I'm Bobbert");
+    if (player_collision(entity->x, entity->y)) {
+    	entity->x-=TILE_SIZE;
+    }
   }
 }
 
@@ -267,9 +283,9 @@ void bobbert_save(EntityState* entity) {
    }
     
     if (entity->x > x)
-      entity->x-=2;
+      entity->x-=4;
     else if (entity->x < x)
-      entity->x+=3;
+      entity->x+=4;
     if (entity->y > y)
       entity->y-=2;
     else if (entity->y < y)
@@ -678,7 +694,7 @@ void strong_spider_attack(EntityState* entity) {
 
 void strong_spider_retreat(EntityState* entity) {
   entity->memory = 0;
-  entity->x += 12 + rand8()&7;
+  entity->x += 12;
   entity->y += rand8()&7;
   entity->y -= rand8()&7;
   if (entity->y > playery)
@@ -1439,10 +1455,11 @@ void main(void) {
     if (damage_cooldown != 0)
       damage_cooldown--;
     
+    
   }
   wait_frame();
   // Game Over
-  dialogue("GAME OVER", "Going back to last save.");
+  dialogue("GAME OVER", death_messages[deaths&0xf]);
   vrambuf_put(NTADR_A(0,2), "                                 ", 32);
   death();
   for (i = 0; i < 16; i++)
