@@ -54,7 +54,7 @@ const Tile tiles[] = {
   {0x90, 1 | DOOR1},	// 23: Underground door1
   {0x90, 1 | DOOR2},	// 24: Underground door2
   {0x90, 1 | DOOR3},	// 25: Underground door3
-  {0xa0, 1 | GROUND},	// 26: Red Block marker
+  {0x94, 1 | GROUND},	// 26: Red Block marker
   
 };
 
@@ -345,12 +345,7 @@ const Area areas[] = {
   {	// 15: Past Turlin
     64, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
     {	// Entities
-      {20, 10*TILE_SIZE, TILE_SIZE*6-8, GREEN_SPIDER_HP},
-      {20, 11*TILE_SIZE, TILE_SIZE*5, GREEN_SPIDER_HP},
-      {20, 11*TILE_SIZE, TILE_SIZE*6, GREEN_SPIDER_HP},
-      {20, 12*TILE_SIZE, 5*TILE_SIZE-8, GREEN_SPIDER_HP},
-      {20, 12*TILE_SIZE, 6*TILE_SIZE-8, GREEN_SPIDER_HP},
-      {20, 12*TILE_SIZE, 7*TILE_SIZE-8, GREEN_SPIDER_HP},
+      {7, 14*TILE_SIZE, TILE_SIZE*6-8, GREEN_SPIDER_HP},
     },
     {	// Doors
       {},{},{},
@@ -363,6 +358,7 @@ const Area areas[] = {
   {	// 16: Underground Maze
     32, {10,32,32,32,32,30,30,30, 30,30,30,30,30,30,34,34,34,34,30,30,30,30,30,30, 30,30,30,33,33,33,33,10},
     {	// Entities
+      {14, TILE_SIZE*9, TILE_SIZE*4}
     },
     {	// Doors
       {19, TILE_SIZE*16-8, TILE_SIZE*10},{18, TILE_SIZE*1, TILE_SIZE*6-8},{17, TILE_SIZE*1, TILE_SIZE*6-8},
@@ -372,13 +368,10 @@ const Area areas[] = {
     song_dungeon,
     UNKNOWN
   },
-  {	// 17: Monster room
+  {	// 17: Right room
     15, {30,30,30,30,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
     {	// Entities
-      {17, TILE_SIZE*6,TILE_SIZE*4},
-      {17, TILE_SIZE*9,TILE_SIZE*4},
-      {14, TILE_SIZE*11, TILE_SIZE*6-8},
-      {10, TILE_SIZE*8-8, TILE_SIZE*6-8}
+      {17, TILE_SIZE*8-8, TILE_SIZE*6-8}
     },
     {	// Doors
       {},{},{},
@@ -388,12 +381,11 @@ const Area areas[] = {
     song_dungeon,
     UNKNOWN
   }, 
-  {	// 18: Sign room
+  {	// 18: Middle room
     15, {30,30,30,30,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
     {	// Entities
-      {10, TILE_SIZE*8-8,TILE_SIZE*6-8},
-      {14, TILE_SIZE*11, TILE_SIZE*6-8},
-      {17, TILE_SIZE*8-8, TILE_SIZE*4}
+      {17, TILE_SIZE*8-8,TILE_SIZE*4},
+      {17, TILE_SIZE*8-8, TILE_SIZE*6}
     },
     {	// Doors
       {},{},{},
@@ -406,9 +398,10 @@ const Area areas[] = {
   {	// 19: Underground Maze2
     32, {10,32,32,32,32,30,30,30, 30,30,30,30,30,30,36,36,36,36,30,30,30,30,30,30, 30,30,30,33,33,33,33,10},
     {	// Entities
+      {14, TILE_SIZE*30, TILE_SIZE*7}
     },
     {	// Doors
-      {17, TILE_SIZE*1, TILE_SIZE*6-8},{16, TILE_SIZE*3-8, TILE_SIZE*1},{20, TILE_SIZE*1, TILE_SIZE*6-8},
+      {22, TILE_SIZE*1, TILE_SIZE*6-8},{16, TILE_SIZE*3-8, TILE_SIZE*1},{20, TILE_SIZE*1, TILE_SIZE*6-8},
       {},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
@@ -433,13 +426,35 @@ const Area areas[] = {
     UNKNOWN
   },
   {	// 21: Boss battle
-    15, {10,35,35,35,35,35,35,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
+    13, {10,35,35,35,35,35,35,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
     {	// Entities
+      {},{},{},
+      {},
+      
+      {28, TILE_SIZE*14, TILE_SIZE*6-3},
+      {27, TILE_SIZE*14, TILE_SIZE*6},
     },
     {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA},{NULL_AREA}
     },
     song_boss,
     UNKNOWN
-  }
+  },
+  {	// 22: Left room
+    15, {30,30,30,30,35,35,35,35,35,35,35,35,10,10,10,10,10,10,10},
+    {	// Entities
+      {7, TILE_SIZE*8-8, TILE_SIZE*3, SPIDER_HP},
+      {7, TILE_SIZE*8-8, TILE_SIZE*8, SPIDER_HP}
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {19, TILE_SIZE*3-8, TILE_SIZE*1}
+    },
+    song_dungeon,
+    UNKNOWN
+  }, 
   
 };

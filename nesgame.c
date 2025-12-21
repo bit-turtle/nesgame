@@ -41,7 +41,12 @@ extern byte music_data_nes_game_music[];
 #include "flags.h"
 //#link "flags.c"
 
+// BCD
+#include "bcd.h"
+//#link "bcd.c"
+
 #define INITIAL_AREA 0
+
 #define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
@@ -51,6 +56,16 @@ const byte weapon_damage[] = {3, 2, 4, 1};
 // Global Variables
 #define INITIAL_COINS 0
 #define INITIAL_KEYS 0
+
+word deaths = 0;
+void death() {
+  char counter[3] = "\x26  ";
+  deaths = bcd_add(deaths, 1);
+  counter[1] = 0x30+((deaths>>4)&0xf);
+  counter[counter[1] == 0x30 ? 1 : 2] = 0x30+deaths;
+  vrambuf_put(NTADR_A(18, 2), counter, 3);
+}
+
 byte coins;
 bool doorinhibitor = false;
 bool compass = false;
@@ -91,7 +106,8 @@ byte dir = RIGHT;
 #define PLAYER_RUN_MIN_HEALTH 6
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
-#define SPIDER_DAMAGE 3
+#define SPIDER_DAMAGE 2
+#define GREEN_SPIDER_DAMAGE 3
 byte playerspeed = 0;
 bool shield = false;
 #define ATTACK_TIME 8
@@ -114,18 +130,24 @@ byte MAX_PLAYER_HEALTH = 12;
 #define INITIAL_HEALTH 12
 byte playerhealth;
 #define DAMAGE_COOLDOWN 12
-#define PLAYER_KNOCKBACK_LIMIT 8
+#define PLAYER_KNOCKBACK 6
+#define WEAK_PLAYER_KNOCKBACK 3
+#define WEAK_HIT_HP 1
 byte damage_cooldown = 0;
 bool knockback_flip = false;
 void damage(byte dmg) {
   byte i, j;
-  if (dmg < PLAYER_KNOCKBACK_LIMIT) {
-  playerx = oldplayerx+(dir == RIGHT? -dmg : dmg);
+  
+  if (knockback_flip) dir = dir==RIGHT? LEFT:RIGHT;
+  if (dmg > WEAK_HIT_HP)
+    j = PLAYER_KNOCKBACK;
+  else
+    j = WEAK_PLAYER_KNOCKBACK;
+  playerx = oldplayerx+(dir == RIGHT? -j : j);
   playery = oldplayery;
     if ( dir == RIGHT && oldplayerx < playerx || dir == LEFT && oldplayerx > playerx)
       playerx = oldplayerx;
-  }
-  if (!knockback_flip)
+    
   dir = dir==RIGHT? LEFT:RIGHT;
   knockback_flip = true;
   if (damage_cooldown != 0)
@@ -346,6 +368,7 @@ void soup_pot(EntityState* e) {
       dialogue("Bobbert", "Could you do a favor for me?");
       dialogue("Bobbert", "I need this letter delivered");
       dialogue("Bobbert", "Go quickly on my horse!");
+      dialogue("Bobbert", "You can dismount with \x12");
       vrambuf_put(NTADR_A(26,2), "\x1e", 1);
       flags[BOBBERT] |= HAS_MESSAGE;
       flags[BOBBERT] |= HORSE_LENT;
@@ -409,10 +432,10 @@ void sign_read(EntityState*) {
       dialogue("End of the road.", "Continue if you dare");
       break;
     case 9:
-      dialogue("Where am I?", "I lost my key somewhwere");
+      dialogue("Deep within the forest", "The great sword lies");
       break;
     case 11:
-      dialogue("Warning:", "Monsters.");
+      dialogue("Look behind you", "Monsters.");
       for (i = 1; i <= 3; i++) {
       	current_entities[i].entity = 7;
         current_entities[i].x = TILE_SIZE*32;
@@ -425,14 +448,8 @@ void sign_read(EntityState*) {
         current_entities[i].y = TILE_SIZE*6-8;
       }
       break;
-    case 18:
-      dialogue("Which one?", "Choose your path wisely");
-      break;
     case 20:
-      dialogue("Position the turtles.", "Your path shows you the way.");
-      break;
-    case 17:
-      dialogue("...", "     \xbd\xbf     \xbd\xbf       ");
+      dialogue("Position the turtles.", "The paths show the way.");
       break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
@@ -448,6 +465,7 @@ void basic_sword_init(EntityState* entity) {
 void basic_sword_collect(EntityState* entity) {
   weapon=1;
   entity->entity = 0;
+  load_area(14, TILE_SIZE*38, TILE_SIZE*5);
 }
 
 void fountain_of_health(EntityState*) {
@@ -507,8 +525,6 @@ void mayor_turt(EntityState*) {
   else if (!(flags[TURLIN]&LE_MONSTERS)) {
   	dialogue("Mayor Le", "Have you seen them?");
     	dialogue("Mayor Le", "The monsters.");
-        dialogue("Mayor Le", "People don't come here,");
-    	dialogue("Mayor Le", "Not since they appeared.");
     	flags[TURLIN]|=LE_MONSTERS;
   }
   else {
@@ -541,11 +557,11 @@ void chest_collect(EntityState* entity) {
       update_coins(coins+1);
       flags[FOREST] |= COINS_2;
       break;
-    case 18:
+    case 19:
       update_keys(keys+1);
       flags[FOREST] |= KEYS_2;
       break;
-    case 17:
+    case 16:
       update_coins(coins+2);
       flags[FOREST] |= COINS_3;
       break;
@@ -569,10 +585,10 @@ void chest_init(EntityState* entity) {
     case 14:
       if (flags[FOREST]&COINS_2) empty = true;
       break;
-    case 18:
+    case 19:
       if (flags[FOREST]&KEYS_2) empty = true;
       break;
-    case 17:
+    case 16:
       if (flags[FOREST]&COINS_3) empty = true;
       break;
       
@@ -628,7 +644,7 @@ void tunnel_door_inhibitor(EntityState* entity) {
 } 
 
 void strong_spider_hit(EntityState* entity) {
-  damage(5);
+  damage(GREEN_SPIDER_DAMAGE);
   entity->entity = 22;
 }
 
@@ -680,10 +696,10 @@ void maze_puzzle_solved(EntityState* entity) {
   if (current_entities[0].y != TILE_SIZE*8)
     solved = false;
   
-  if (current_entities[1].y != TILE_SIZE*3)
+  if (current_entities[1].y != TILE_SIZE*8)
     solved = false;
   
-  if (current_entities[2].y != TILE_SIZE*8)
+  if (current_entities[2].y != TILE_SIZE*3)
     solved = false;
     
   if (solved) {
@@ -694,10 +710,212 @@ void maze_puzzle_solved(EntityState* entity) {
 
 void puzzle_pushable(EntityState* entity) {
   entity->y += playery-oldplayery;
-  if (entity->y < TILE_SIZE*3)
+  playerx = oldplayerx;
+  if (entity->y < TILE_SIZE*3) {
     entity->y = TILE_SIZE*3;
-  if (entity->y > TILE_SIZE*8)
+    playery = oldplayery;
+  }
+  if (entity->y > TILE_SIZE*8) {
     entity->y = TILE_SIZE*8;
+    playery = oldplayery;
+  }
+}
+
+void ball_hit(EntityState* entity) {
+  entity->entity = 0;
+  damage(1);
+}
+
+void ball_tick(EntityState* entity) {
+  entity->x-=(entity->memory&0b10000000) ? -2 : 2;
+  if (entity->memory&0b01000000)
+    entity->y -= entity->memory&0xf;
+  else
+    entity->y += entity->memory&0xf;
+  if (entity->x < TILE_SIZE*1-8 || entity->x > TILE_SIZE*15-8) {
+    entity->memory^=0b10000000;
+  }
+  if (entity->y < TILE_SIZE*2-8 || entity->y > TILE_SIZE*10-8) {
+    entity->memory^=0b01000000;
+  }
+}
+
+void ball_whack(EntityState* entity) {
+  entity->entity = 26;
+}
+
+void ball_flyback(EntityState* entity) {
+  entity->x += 8;
+  
+  // Course Correction
+  if (entity->y > TILE_SIZE*6-8)
+    entity->y-=2;
+  if (entity->y < TILE_SIZE*6-8)
+    entity->y+=2;
+  
+  if (collision(entity->x, entity->y, current_entities[MAX_ENTITIES-1].x, current_entities[MAX_ENTITIES-1].y)) {
+    entity->entity = 0;
+    current_entities[MAX_ENTITIES-2].memory--;
+  }
+  if (entity->x > TILE_SIZE*16) {
+  	entity->entity = 0;
+  }
+}
+
+void boss_tick(EntityState* entity) {
+  bool summon = true;
+  byte i = 0;
+  for (i = 0; i < 4; i++) {
+  	if (current_entities[i].entity != 0)
+          summon = false;
+  }
+  if (summon && entity->memory == 0)
+    current_entities[MAX_ENTITIES-1].memory++;
+  entity->chr_offset = 4;
+  if (summon) switch (current_entities[MAX_ENTITIES-1].memory) {
+    case 1:
+      current_entities[0].entity = 25;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*6-8;
+      current_entities[0].memory = 0;
+      current_entities[0].chr_offset = 0;
+      entity->memory = 1;
+      break;
+    case 2:
+      current_entities[0].entity = 25;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*6-8;
+      current_entities[0].memory = 1;
+      current_entities[0].chr_offset = 0;
+      current_entities[1].entity = 25;
+      current_entities[1].x = TILE_SIZE*14;
+      current_entities[1].y = TILE_SIZE*6-8;
+      current_entities[1].memory = 0b01000010;
+      current_entities[1].chr_offset = 0;
+      entity->memory = 2;
+      break;
+    case 3:
+      current_entities[0].entity = 25;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*6-8;
+      current_entities[0].memory = 5;
+      current_entities[0].chr_offset = 0;
+      current_entities[1].entity = 25;
+      current_entities[1].x = TILE_SIZE*14;
+      current_entities[1].y = TILE_SIZE*6-8;
+      current_entities[1].memory = 0b01000100;
+      current_entities[1].chr_offset = 0;
+      entity->memory = 2;
+      break;
+    case 13:
+      current_entities[0].entity = 25;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*6-8;
+      current_entities[0].memory = 1;
+      current_entities[0].chr_offset = 0;
+      entity->memory = 1;
+      current_entities[1].entity = 17;
+      current_entities[1].x = TILE_SIZE*14;
+      current_entities[1].y = TILE_SIZE*3;
+      break;
+    case 34:
+      
+      current_entities[0].entity = 25;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*6-8;
+      current_entities[0].memory = 4;
+      current_entities[0].chr_offset = 0;
+      current_entities[1].entity = 25;
+      current_entities[1].x = TILE_SIZE*14;
+      current_entities[1].y = TILE_SIZE*6-8;
+      current_entities[1].memory = 0b01000100;
+      current_entities[1].chr_offset = 0;
+      entity->memory = 3;  
+      current_entities[2].entity = 25;
+      current_entities[2].x = TILE_SIZE*14;
+      current_entities[2].y = TILE_SIZE*6-8;
+      current_entities[2].memory = 0;
+      current_entities[2].chr_offset = 0;
+      break;
+    case 100:
+      
+      current_entities[0].entity = 8;
+      current_entities[0].x = TILE_SIZE*14;
+      current_entities[0].y = TILE_SIZE*8;
+      current_entities[0].chr_offset = 0;
+      current_entities[1].entity = 8;
+      current_entities[1].x = TILE_SIZE*14;
+      current_entities[1].y = TILE_SIZE*3;
+      current_entities[1].chr_offset = 0;
+      break;
+      
+    case 255:
+      // Melee
+      entity->entity = 30;
+      current_entities[MAX_ENTITIES-1].entity = 0;
+      break;
+  }
+  else entity->chr_offset = 0;
+}
+
+void sword_lowering(EntityState* entity) {
+  entity->y+=2;
+  if (entity->y == TILE_SIZE*6-8) {
+  	entity->y = TILE_SIZE*6-8;
+    	entity->entity = 11;
+  }
+}
+
+void boss_melee_fly(EntityState* entity) {
+  entity->chr_offset = (anim&4) ? 4 : 0;
+  if (entity->y+TILE_SIZE*2 > playery)
+    entity->y--;
+  else if (entity->x+TILE_SIZE*2 > playerx && entity->x < playerx+TILE_SIZE*2)
+    entity->entity = 31;
+  else
+    entity->y += rand8()&1 ? -1 : 1;
+  
+  if (playerx > entity->x)
+    entity->x+=4;
+  else if (playerx < entity->x)
+    entity->x-=4;
+  else
+    entity->x+= rand8()&1 ? -2 : 2;
+}
+
+void boss_melee_attack(EntityState* entity) {
+  if (playerx > entity->x) {
+    entity->x+=6;
+  }
+  else if (playerx < entity->x) {
+    entity->x-=6;
+  }
+  if (playery > entity->y) {
+    entity->y+=4;
+  }
+  else if (playery < entity->y) {
+    entity->y-=3;
+  }
+  
+}
+
+void boss_retreat(EntityState* entity) {
+  entity->x+=8;
+  if (entity->x >= TILE_SIZE*15)
+    entity->entity = 30;
+}
+
+void boss_hit(EntityState* entity) {
+  damage(2);
+  entity->entity = 32;
+}
+
+void boss_die(EntityState* entity) {
+  entity->entity = 0;
+  
+  current_entities[0].entity = 29;
+  current_entities[0].x = TILE_SIZE*8-8;
+  current_entities[0].y = -TILE_SIZE;
 }
 
 // Entities
@@ -746,7 +964,23 @@ const Entity entities[] = {
   // 23: Pushable Brick
   {0xbc, 0, puzzle_pushable, NULL},
   // 24: Puzzle solver door inhibitor
-  {0x90, 1, NULL, maze_puzzle_solved}
+  {0x90, 1, NULL, maze_puzzle_solved},
+  // 25: Boss1 Projectile
+  {0xc, 2, ball_hit, ball_tick, ball_whack, NULL, NULL},
+  // 26: Boss1 Projectile FLyback
+  {0xc, 2, NULL, ball_flyback, NULL, NULL, NULL},
+  // 27: Boss1 Legs (Spider)
+  {0xb0, 2},
+  // 28: Boss1 Head (Bat)
+  {0xf0, 0, NULL, boss_tick},
+  // 29: Sword lowering
+  {0x8c, 2, NULL, sword_lowering},
+  // 30: Boss1 Melee fly
+  {0xf0, 0, NULL, boss_melee_fly, boss_die},
+  // 31: Boss1 Melee attack
+  {0xf0, 0, boss_hit, boss_melee_attack, boss_die},
+  // 32: Boss1 Melee retreat
+  {0xf0, 0, NULL, boss_retreat, boss_die},
 };
 
 
@@ -874,6 +1108,22 @@ void player_scroll() {
       x_scroll = newx_scroll;
 }
 
+// Save data
+byte save_coins;
+bool save_compass;
+bool save_horse;
+EntityState save_horse_pos;
+byte save_coins;
+byte save_health;
+byte save_max_health;
+byte save_weapon;
+byte save_keys;
+word save_x;
+byte save_y;
+bool save_bow;
+byte save_dir;
+byte save_flags[16];
+
 void load_area(byte newarea, word x, byte y) {
   byte i;
   word final_scroll;
@@ -883,6 +1133,21 @@ void load_area(byte newarea, word x, byte y) {
   playery = y;
   oldplayerx = x;
   oldplayery = y;
+  save_x = x;
+  save_y = y;
+  save_keys = keys;
+  save_weapon = weapon;
+  save_health = playerhealth;
+  save_max_health = MAX_PLAYER_HEALTH;
+  save_horse = horse;
+  save_coins = coins;
+  save_compass = compass;
+  save_bow = bow;
+  save_dir = dir;
+  save_horse_pos = current_entities[HORSE_INDEX];
+  for (i = 0; i < 16; i++) {
+  	save_flags[i] = flags[i];
+  }
   player_scroll();
   final_scroll = x_scroll;
   x_scroll += 32*9;
@@ -1009,7 +1274,7 @@ void main(void) {
   vram_fill(0x3, 32);
   // top bar split sprite
   oam_clear();
-  oam_spr(8, 30, 1, 0, 0);
+  oam_spr(0, 30, 1, 0, 0);
   // vrambuf initialization
   vrambuf_clear();
   set_vram_update(updbuf);
@@ -1020,9 +1285,8 @@ void main(void) {
   //enable rendering
   ppu_on_all();
   
-reset:
   knockback_flip = false;
-  vrambuf_put(NTADR_A(0,2), "                              ", 32);
+  vrambuf_put(NTADR_A(0,2), "                                 ", 32);
   // repeat forever
   load_area(INITIAL_AREA, 6*TILE_SIZE,6*TILE_SIZE-8);
   // Reset newx_scroll
@@ -1043,6 +1307,8 @@ reset:
   coins = INITIAL_COINS;
   update_keys(keys);
   update_coins(coins);
+  
+  save_loaded:
   while(!(playerhealth == 0 && damage_cooldown == 0)) {
     if (attacktimer != 0) {
       attacktimer--;
@@ -1176,12 +1442,34 @@ reset:
   }
   wait_frame();
   // Game Over
-  dialogue("GAME OVER", "Better Luck Next Time!");
+  dialogue("GAME OVER", "Going back to last save.");
+  vrambuf_put(NTADR_A(0,2), "                                 ", 32);
+  death();
   for (i = 0; i < 16; i++)
-    flags[i] = 0;
-  dir = RIGHT;
-  horse = false;
-  horse_area = 0;
-  current_entities[MAX_ENTITIES].entity = 0;
-  goto reset;
+    flags[i] = save_flags[i];
+  horse = save_horse;
+  update_coins(save_coins);
+  update_keys(save_keys);
+  playerhealth = save_health;
+  damage(0);
+  knockback_flip = false;
+  damage_cooldown = 0;
+  MAX_PLAYER_HEALTH = save_max_health;
+  horse = save_horse;
+  weapon = save_weapon;
+  compass = save_compass;
+  bow = save_bow;
+  dir = save_dir;
+  
+  i = ' ';
+  if (!compass)
+    vrambuf_put(NTADR_A(25,2), &i, 1);
+  if (!flags[BOBBERT]&HORSE_STOLEN && !flags[BOBBERT]&HORSE_LENT)
+    vrambuf_put(NTADR_A(26,2), &i, 1);
+  
+  current_entities[HORSE_INDEX] = save_horse_pos;
+  
+  
+  load_area(area, save_x, save_y);
+  goto save_loaded;
 }
