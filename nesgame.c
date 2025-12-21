@@ -113,7 +113,7 @@ word x_scroll = 0;
 word newx_scroll;
 byte dir = RIGHT;
 #define PLAYER_WALK 2
-#define PLAYER_RUN 3
+#define PLAYER_RUN 4
 #define PLAYER_WALK_ANIM_SPEED 1
 #define PLAYER_RUN_ANIM_SPEED 2
 #define PLAYER_RUN_MIN_HEALTH 6
@@ -124,7 +124,8 @@ byte dir = RIGHT;
 byte playerspeed = 0;
 bool shield = false;
 #define ATTACK_TIME 8
-#define HIT_TIME (ATTACK_TIME-3)
+#define HIT_TIME (ATTACK_TIME-4)
+#define HIT_RADIUS 10
 byte attacktimer = 0;
 bool attacking = false;
 word playerx = 50;
@@ -134,6 +135,9 @@ bool collision(word x1, byte y1, word x2, byte y2) {
 }
 bool player_collision(word x, byte y) {
   return collision(x,y, playerx, playery);
+}
+bool attack_hit(word x, byte y) {
+  return (playerx < x+HIT_RADIUS && playerx+HIT_RADIUS >= x && playery < y+HIT_RADIUS && playery+HIT_RADIUS >= y);
 }
 bool horse = false;
 bool moving = false;
@@ -1399,7 +1403,7 @@ void main(void) {
       if (current_entities[i].entity == 0)
         continue;
       // Process
-      if (attacktimer >= HIT_TIME && player_collision(current_entities[i].x, current_entities[i].y)) {
+      if (attacktimer >= HIT_TIME && attack_hit(current_entities[i].x, current_entities[i].y)) {
         current_entities[i].health-=weapon_damage[weapon-1];
         if (entities[current_entities[i].entity].hurt != NULL)
           entities[current_entities[i].entity].hurt(&current_entities[i]);
