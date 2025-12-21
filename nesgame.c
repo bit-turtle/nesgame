@@ -45,9 +45,9 @@ extern byte music_data_nes_game_music[];
 #include "bcd.h"
 //#link "bcd.c"
 
-#define INITIAL_AREA 0
+#define INITIAL_AREA 21
 
-#define INITIAL_WEAPON 0
+#define INITIAL_WEAPON 1
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
 const byte weapon_damage[] = {3, 2, 4, 1};
@@ -860,13 +860,21 @@ void boss_tick(EntityState* entity) {
     case 100:
       
       current_entities[0].entity = 8;
+      current_entities[0].health = SPIDER_HP;
       current_entities[0].x = TILE_SIZE*14;
       current_entities[0].y = TILE_SIZE*8;
       current_entities[0].chr_offset = 0;
       current_entities[1].entity = 8;
+      current_entities[1].health = SPIDER_HP;
       current_entities[1].x = TILE_SIZE*14;
       current_entities[1].y = TILE_SIZE*3;
       current_entities[1].chr_offset = 0;
+      current_entities[2].entity = 25;
+      current_entities[2].x = TILE_SIZE*14;
+      current_entities[2].y = TILE_SIZE*6-8;
+      current_entities[2].memory = 0;
+      current_entities[2].chr_offset = 0;
+      entity->memory = 1;
       break;
       
     case 255:
@@ -930,12 +938,24 @@ void boss_hit(EntityState* entity) {
   entity->entity = 32;
 }
 
+void boss_defeat(EntityState* entity) {
+  entity->memory++;
+  if (entity->memory > 8)
+    entity->y += entity->memory/2-8;
+  else
+    entity->y -= 8-entity->memory/2;
+  if (entity->y > TILE_SIZE*11) {
+    entity->entity = 0;
+
+    current_entities[0].entity = 29;
+    current_entities[0].x = TILE_SIZE*8-8;
+    current_entities[0].y = -TILE_SIZE;
+  }
+}
+
 void boss_die(EntityState* entity) {
-  entity->entity = 0;
-  
-  current_entities[0].entity = 29;
-  current_entities[0].x = TILE_SIZE*8-8;
-  current_entities[0].y = -TILE_SIZE;
+  entity->entity = 33;
+  entity->memory = 0;
 }
 
 // Entities
@@ -1001,6 +1021,8 @@ const Entity entities[] = {
   {0xf0, 0, boss_hit, boss_melee_attack, boss_die},
   // 32: Boss1 Melee retreat
   {0xf0, 0, NULL, boss_retreat, boss_die},
+  // 33: Boss1 Defeat
+  {0xf0, 0 | OAM_FLIP_V, NULL, boss_defeat},
 };
 
 

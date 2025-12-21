@@ -10,8 +10,8 @@ void sprite(word x, byte y, byte ch, byte attr) {
 }
 
 void metasprite(byte ch, byte attr, word x, byte y) {
-  sprite(x, y, ch + (attr&OAM_FLIP_H ? 2 : 0), attr);
-  sprite(x, y+8, ch + (attr&OAM_FLIP_H ? 3 : 1), attr);
-  sprite(x+8, y, ch + (attr&OAM_FLIP_H ? 0 : 2), attr);
-  sprite(x+8, y+8, ch + (attr&OAM_FLIP_H ? 1 : 3), attr);
+  sprite(x, y, ch + (attr&OAM_FLIP_H ? (attr&OAM_FLIP_V ? 3 : 2) : (attr&OAM_FLIP_V ? 1 : 0)), attr);
+  sprite(x, y+8, ch + (attr&OAM_FLIP_H ? (attr&OAM_FLIP_V ? 2 : 3) : (attr&OAM_FLIP_V ? 0 : 1)), attr);
+  sprite(x+8, y, ch + (attr&OAM_FLIP_H ? (attr&OAM_FLIP_V ? 1 : 0) : (attr&OAM_FLIP_V ? 3 : 2)), attr);
+  sprite(x+8, y+8, ch + (attr&OAM_FLIP_H ? (attr&OAM_FLIP_V ? 0 : 1) : (attr&OAM_FLIP_V ? 2 : 3)), attr);
 }
