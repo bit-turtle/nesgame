@@ -126,7 +126,7 @@ const Collumn collumns[] = {
   // 36: Underground backtrack
   {{7,7,7,7,22,22,22,22,22,22,22,24}},
   // 37: Wide Underground for puzzle
-  {{7,7,22,26,22,22,22,26,26,22,7,7}},
+  {{7,7,22,26,22,22,22,22,26,22,7,7}},
   // 38: Wide Underground for puzzle exit
   {{7,7,22,22,22,22,21,22,22,22,7,7}},
 };
@@ -353,7 +353,7 @@ const Area areas[] = {
     {	// Doors
       {},{},{},
       {},{},{},{},
-      {NULL_AREA},{2, TILE_SIZE*57-8, TILE_SIZE*10}
+      {23, TILE_SIZE*1, TILE_SIZE*6-8},{2, TILE_SIZE*57-8, TILE_SIZE*10}
     },
     song_grass,
     NORTH
@@ -459,5 +459,16 @@ const Area areas[] = {
     song_dungeon,
     UNKNOWN
   }, 
+  {	// 23: Past past turlin
+    15, {2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+    {	// Entities
+      {10, TILE_SIZE*12, TILE_SIZE*6-8},
+    },
+    {	// Doors
+      {},{},{},
+      {},{},{},{},
+      {NULL_AREA}, {15, TILE_SIZE*62, TILE_SIZE*6-8}
+    }
+  }
   
 };

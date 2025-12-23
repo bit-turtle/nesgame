@@ -45,12 +45,12 @@ extern byte music_data_nes_game_music[];
 #include "bcd.h"
 //#link "bcd.c"
 
-#define INITIAL_AREA 21
+#define INITIAL_AREA 0
 
-#define INITIAL_WEAPON 1
+#define INITIAL_WEAPON 0
 #define INITIAL_COMPASS false
 #define INITIAL_HORSE false
-const byte weapon_damage[] = {3, 2, 4, 1};
+const byte weapon_damage[] = {3, 4, 6, 1};
 #define DEFAULT_MAX_HEALTH 12
 #define FOUNTAIN_HEALTH 4
 // Global Variables
@@ -116,7 +116,7 @@ byte dir = RIGHT;
 #define PLAYER_RUN 4
 #define PLAYER_WALK_ANIM_SPEED 1
 #define PLAYER_RUN_ANIM_SPEED 2
-#define PLAYER_RUN_MIN_HEALTH 6
+#define PLAYER_RUN_MIN_HEALTH 4
 #define HORSE 6
 #define HORSE_STEAL_DISTANCE 12
 #define SPIDER_DAMAGE 3
@@ -289,7 +289,7 @@ void bobbert_save(EntityState* entity) {
     if (entity->x > x)
       entity->x-=4;
     else if (entity->x < x)
-      entity->x+=4;
+      entity->x+=6;
     if (entity->y > y)
       entity->y-=2;
     else if (entity->y < y)
@@ -471,19 +471,18 @@ void sign_read(EntityState*) {
     case 20:
       dialogue("Position the turtles.", "The paths show the way.");
       break;
+      // Temp win
+    case 23:
+      dialogue("You win!", "That's all for now");
+      break;
     default:
       dialogue("Faded Sign", "The text is unreadable");
   };
   player_pushback();
 }
 
-void basic_sword_init(EntityState* entity) {
-  if (weapon != 0)
-    entity->entity = 0;
-}
-
 void basic_sword_collect(EntityState* entity) {
-  weapon=1;
+  weapon=2;
   entity->entity = 0;
   load_area(14, TILE_SIZE*38, TILE_SIZE*5);
 }
@@ -676,10 +675,10 @@ void strong_spider_attack(EntityState* entity) {
   else 
     sign -= 1;
   if (entity->x > playerx) {
-    entity->x -= entity->memory;
+    entity->x -= entity->memory/2;
   }
   else if (entity->x < playerx) {
-    entity->x += entity->memory;
+    entity->x += entity->memory/2;
   }
   if (playerx > entity->x)
     sign += 1;
@@ -944,7 +943,7 @@ void boss_defeat(EntityState* entity) {
     entity->y += entity->memory/2-8;
   else
     entity->y -= 8-entity->memory/2;
-  if (entity->y > TILE_SIZE*11) {
+  if (entity->y > TILE_SIZE*11 && entity->memory > 35) {
     entity->entity = 0;
 
     current_entities[0].entity = 29;
@@ -978,7 +977,7 @@ const Entity entities[] = {
   // 10: Sign
   {0xb4, 1, sign_read, NULL, basic_die},
   // 11: Basic Sword
-  {0x8c, 2, basic_sword_collect, NULL, NULL, basic_sword_init},
+  {0x8c, 2, basic_sword_collect},
   // 12: Fountain of health
   {0xb8, 2, fountain_of_health, NULL},
   // 13: Mayor turt
