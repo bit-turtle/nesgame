@@ -446,7 +446,11 @@ void sign_read(EntityState*) {
       dialogue("Sign", "<-- Forest ------ Turlin -->");
       break;
     case 3:
-      dialogue("Welcome to Turlin!", "Population: 2");
+      if (flags[TURLIN]&SIGN_UPDATE && !(flags[TURLIN]&HOUSE_KEYS)) {
+        dialogue("Welcome to Turlin!", "Population: 1  :(");
+      	flags[TURLIN] |= UPDATE_CHECK;
+      }
+      else dialogue("Welcome to Turlin!", "Population: 2");
       break;
     case 5:
       dialogue("End of the road.", "Continue if you dare");
@@ -460,7 +464,7 @@ void sign_read(EntityState*) {
       	current_entities[i].entity = 7;
         current_entities[i].x = TILE_SIZE*32;
         current_entities[i].y = (TILE_SIZE*3)+(TILE_SIZE*3-8)*(i-1);
-        current_entities[i].health = 3;
+        current_entities[i].health = SPIDER_HP;
       }
       for (i = 4; i <= 5; i++) {
       	current_entities[i].entity = 17;
@@ -545,6 +549,81 @@ void mayor_turt(EntityState*) {
   	dialogue("Mayor Le", "Have you seen them?");
     	dialogue("Mayor Le", "The monsters.");
     	flags[TURLIN]|=LE_MONSTERS;
+  }
+  else if (flags[TURLIN]&OSCAR_DISCOVERY && !(flags[TURLIN]&SIGN_UPDATE)) {
+  	dialogue("Mayor Le", "Wait...");
+    	dialogue("Mayor Le", "So no one lives there?");
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    	dialogue("Mayor Le", "Oscar used to live there.");
+    
+    	dialogue("Mayor Le", "I haven't seen him,");
+    	dialogue("Mayor Le", "Not recently anyway.");
+    	dialogue("Mayor Le", "Not since the monsters.");
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    
+    	dialogue("Mayor Le", "I hope he's ok...");
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    	dialogue("Mayor Le", "I should update that sign");
+    flags[TURLIN] |= SIGN_UPDATE;
+    	
+  }
+  else if (flags[TURLIN]&SIGN_UPDATE && !(flags[TURLIN]&HOUSE_KEYS)) {
+  	if (flags[TURLIN]&UPDATE_CHECK) {
+        	dialogue("Mayor Le", "You saw it?");
+        	dialogue("Mayor Le", "Kind of sad honestly.");
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+        	dialogue("Mayor Le", "Hey, I have an idea!");
+        	dialogue("Mayor Le", "Do you want to live here?");
+          	switch(decision("Live in Turlin?")) {
+                  case YES:
+                    dialogue("Mayor Le", "Yay!");
+                    dialogue("Mayor Le", "Here are some keys.");
+                    dialogue("Mayor Le", "The ones to that house.");
+                    dialogue("Mayor Le", "I always keep spares");
+                    flags[TURLIN] |= HOUSE_KEYS;
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    wait_frame();
+    	dialogue("Mayor Le", "I'll update that sign again");
+    
+                    break;
+                  case NO:
+                    dialogue("Mayor Le", "Oh well...");
+                    break;
+                  case MAYBE:
+                    dialogue("Mayor Le", "I hope you decide to!");
+                    break;
+                }
+        }
+    else dialogue("Mayor Le", "Go check out the sign!");
+  }
+  else if (flags[TURLIN]&HOUSE_KEYS) {
+  	dialogue("Mayor Le", "How is living in Turlin?");
+    	switch (decision("Do you like Turlin?")) {
+          case YES:
+            dialogue("Mayor Le", "I knew you would!");
+            break;
+          case NO:
+            dialogue("Mayor Le", "That's too bad.");
+            break;
+          case MAYBE:
+            dialogue("Mayor Le", "I think you will!");
+            break;
+        }
   }
   else {
     dialogue("Mayor Le", "Let me tell you a story.");
@@ -957,6 +1036,10 @@ void boss_die(EntityState* entity) {
   entity->memory = 0;
 }
 
+void oscar_discovery(EntityState*) {
+  flags[TURLIN] |= OSCAR_DISCOVERY;
+}
+
 // Entities
 const Entity entities[] = {
   // Null entity, nothing is rendered
@@ -1022,6 +1105,8 @@ const Entity entities[] = {
   {0xf0, 0, NULL, boss_retreat, boss_die},
   // 33: Boss1 Defeat
   {0xf0, 0 | OAM_FLIP_V, NULL, boss_defeat},
+  // 34: Oscar Discovery
+  {0x1a, 0, NULL, NULL, NULL, oscar_discovery}
 };
 
 
@@ -1455,15 +1540,13 @@ void main(void) {
       offroad = false;
     if (i & DOOR && !doorinhibitor) {
       wait_frame();
-      if (i&LOCKED && keys == 0) {
+      if (i&LOCKED && (keys == 0 && !(area == 3 && flags[TURLIN]&HOUSE_KEYS) ) ) {
         dialogue("Door is locked", "It seems you need a key");
-        playerx = oldplayerx;
-        playery = oldplayery;
+        player_pushback();
       }
       else if (horse && !(i&LARGE_DOOR) ) {
         dialogue("Horse is too big", "Your horse can't fit!");
-        playerx = oldplayerx;
-        playery = oldplayery;
+        player_pushback();
       }
       else {
         if (i&LOCKED) {

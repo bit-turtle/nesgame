@@ -183,7 +183,7 @@ const Area areas[] = {
       {12, 16*TILE_SIZE-8, 6*TILE_SIZE-8}
     },
     {// Doors
-      {4, 1*TILE_SIZE, 6*TILE_SIZE-8},{},{},
+      {4, 1*TILE_SIZE, 6*TILE_SIZE-8},{24, TILE_SIZE*1, TILE_SIZE*6-8},{},
       {2, 62*TILE_SIZE, 6*TILE_SIZE-8},{},{},{},
       {NULL_AREA}, {NULL_AREA}
     },
@@ -469,6 +469,19 @@ const Area areas[] = {
       {},{},{},{},
       {NULL_AREA}, {15, TILE_SIZE*62, TILE_SIZE*6-8}
     }
-  }
+  },
+  
+  { // 24: Sanderson
+    12, {12,12,12,12,12,12,12,12,12,12,12,11,10,10,10,10,10,10,10,10,10,10},
+    {
+      {34, 0,0}
+    },
+    {
+      {},{},{},{},{},{},{},
+      {NULL_AREA}, {3, 23*TILE_SIZE, 1*TILE_SIZE}
+    },
+    song_turlin,
+    NORTH
+  },
   
 };
